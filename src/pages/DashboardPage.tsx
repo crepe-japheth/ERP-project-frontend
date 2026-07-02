@@ -10,6 +10,8 @@ import {
   YAxis,
 } from 'recharts'
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { fetchAlertSummary, fetchReportValuation } from '../api/inventory'
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -73,6 +75,17 @@ export function DashboardPage() {
   const { isDark } = useTheme()
   const navigate = useNavigate()
   const firstName = user?.first_name || user?.username || 'there'
+  const [alertTotal, setAlertTotal] = useState(0)
+  const [stockValue, setStockValue] = useState<string | null>(null)
+  const [lowStockCount, setLowStockCount] = useState(0)
+
+  useEffect(() => {
+    fetchAlertSummary().then((s) => {
+      setAlertTotal(s.total)
+      setLowStockCount((s.counts.minimum_stock ?? 0) + (s.counts.out_of_stock ?? 0))
+    }).catch(() => {})
+    fetchReportValuation().then((v) => setStockValue(v.total_value)).catch(() => {})
+  }, [])
 
   const tickColor = isDark ? '#64748b' : '#94a3b8'
   const tooltipStyle = {
@@ -139,7 +152,7 @@ export function DashboardPage() {
         />
         <KpiCard
           title="Stock Value"
-          value="RWF 4.2M"
+          value={stockValue ? `RWF ${(Number(stockValue) / 1_000_000).toFixed(1)}M` : '—'}
           change="+2.3%"
           trend="up"
           icon={TrendingUp}
@@ -147,10 +160,10 @@ export function DashboardPage() {
           iconColor="#16a34a"
         />
         <KpiCard
-          title="Low Stock Items"
-          value={5}
-          change="-15%"
-          trend="down"
+          title="Stock Alerts"
+          value={alertTotal}
+          change={lowStockCount > 0 ? `${lowStockCount} low stock` : 'All clear'}
+          trend={alertTotal > 0 ? 'down' : 'up'}
           icon={AlertTriangle}
           iconBg={isDark ? '#450a0a' : '#fef2f2'}
           iconColor="#ef4444"

@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  PackageMinus,
   Search,
   Settings,
   ShoppingCart,
@@ -38,7 +39,7 @@ const navGroups: NavGroup[] = [
     title: 'Main',
     items: [
       { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-      { label: 'Notifications', to: '/notifications', icon: Bell, badge: 3 },
+      { label: 'Notifications', to: '/inventory/alerts', icon: Bell },
       { label: 'Search', to: '/search', icon: Search },
       { label: 'Calendar', to: '/calendar', icon: Calendar },
     ],
@@ -50,7 +51,10 @@ const navGroups: NavGroup[] = [
       { label: 'Categories', to: '/inventory/categories', icon: Boxes },
       { label: 'Suppliers', to: '/inventory/suppliers', icon: Truck },
       { label: 'Purchases', to: '/inventory/purchases', icon: ShoppingCart },
+      { label: 'Stock Issues', to: '/inventory/issues', icon: PackageMinus },
       { label: 'Stock', to: '/inventory/stock', icon: ClipboardList },
+      { label: 'Alerts', to: '/inventory/alerts', icon: Bell },
+      { label: 'Reports', to: '/inventory/reports', icon: BarChart3 },
     ],
   },
   {
@@ -66,7 +70,6 @@ const navGroups: NavGroup[] = [
   {
     title: 'System',
     items: [
-      { label: 'Reports', to: '/reports', icon: BarChart3 },
       { label: 'Settings', to: '/settings', icon: Settings },
     ],
   },

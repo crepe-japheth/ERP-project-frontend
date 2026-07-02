@@ -1,10 +1,23 @@
 import type {
+  AlertSummary,
   Category,
+  ExpiredItemRow,
   PaginatedResponse,
   Product,
+  Purchase,
+  PurchaseListItem,
+  ReorderReportRow,
+  StockAdjustment,
+  StockAlert,
+  StockIssue,
+  StockIssueItem,
+  StockIssueListItem,
   StockLevel,
+  StockMovement,
+  StockReportRow,
   Supplier,
   UnitOfMeasure,
+  ValuationReport,
 } from '../types/inventory'
 import { apiClient } from './client'
 
@@ -85,5 +98,136 @@ export async function deleteProduct(id: string) {
 
 export async function fetchStock(params?: { search?: string; page?: number; low_stock?: boolean }) {
   const { data } = await apiClient.get<PaginatedResponse<StockLevel>>(`${BASE}/stock/`, { params })
+  return data
+}
+
+export async function fetchPurchases(params?: { search?: string; status?: string; page?: number }) {
+  const { data } = await apiClient.get<PaginatedResponse<PurchaseListItem>>(`${BASE}/purchases/`, { params })
+  return data
+}
+
+export async function fetchPurchase(id: string) {
+  const { data } = await apiClient.get<Purchase>(`${BASE}/purchases/${id}/`)
+  return data
+}
+
+export async function createPurchase(payload: object) {
+  const { data } = await apiClient.post<Purchase>(`${BASE}/purchases/`, payload)
+  return data
+}
+
+export async function approvePurchase(id: string) {
+  const { data } = await apiClient.post<Purchase>(`${BASE}/purchases/${id}/approve/`)
+  return data
+}
+
+export async function receivePurchase(id: string, payload: object) {
+  const { data } = await apiClient.post(`${BASE}/purchases/${id}/receive/`, payload)
+  return data
+}
+
+export async function cancelPurchase(id: string) {
+  await apiClient.delete(`${BASE}/purchases/${id}/`)
+}
+
+export async function fetchIssues(params?: { search?: string; status?: string }) {
+  const { data } = await apiClient.get<PaginatedResponse<StockIssueListItem>>(`${BASE}/issues/`, { params })
+  return data
+}
+
+export async function fetchIssue(id: string) {
+  const { data } = await apiClient.get<StockIssue>(`${BASE}/issues/${id}/`)
+  return data
+}
+
+export async function createIssue(payload: object) {
+  const { data } = await apiClient.post<StockIssue>(`${BASE}/issues/`, payload)
+  return data
+}
+
+export async function approveIssue(id: string) {
+  const { data } = await apiClient.post<StockIssue>(`${BASE}/issues/${id}/approve/`)
+  return data
+}
+
+export async function executeIssue(id: string) {
+  const { data } = await apiClient.post<StockIssue>(`${BASE}/issues/${id}/issue/`)
+  return data
+}
+
+export async function returnIssueItem(itemId: string, payload: object) {
+  const { data } = await apiClient.post(`${BASE}/issues/items/${itemId}/return/`, payload)
+  return data
+}
+
+export async function consumeIssueItem(itemId: string, consumed_quantity: string) {
+  const { data } = await apiClient.post(`${BASE}/issues/items/${itemId}/consume/`, { consumed_quantity })
+  return data
+}
+
+export async function fetchMovements(params?: { search?: string; movement_type?: string }) {
+  const { data } = await apiClient.get<PaginatedResponse<StockMovement>>(`${BASE}/stock/movements/`, { params })
+  return data
+}
+
+export async function fetchAdjustments(params?: { search?: string }) {
+  const { data } = await apiClient.get<PaginatedResponse<StockAdjustment>>(`${BASE}/stock/adjustments/`, { params })
+  return data
+}
+
+export async function createAdjustment(payload: object) {
+  const { data } = await apiClient.post<StockAdjustment>(`${BASE}/stock/adjustments/`, payload)
+  return data
+}
+
+export async function fetchAlerts(type?: string) {
+  const { data } = await apiClient.get<{ summary: AlertSummary; alerts: StockAlert[] }>(
+    `${BASE}/alerts/`, { params: type ? { type } : {} },
+  )
+  return data
+}
+
+export async function fetchAlertSummary() {
+  const { data } = await apiClient.get<AlertSummary>(`${BASE}/alerts/summary/`)
+  return data
+}
+
+export async function fetchReportValuation() {
+  const { data } = await apiClient.get<ValuationReport>(`${BASE}/reports/valuation/`)
+  return data
+}
+
+export async function fetchReportReorder() {
+  const { data } = await apiClient.get<ReorderReportRow[]>(`${BASE}/reports/reorder/`)
+  return data
+}
+
+export async function fetchReportCurrentStock(search?: string) {
+  const { data } = await apiClient.get<StockReportRow[]>(
+    `${BASE}/reports/current-stock/`, { params: search ? { search } : {} },
+  )
+  return data
+}
+
+export async function fetchReportOutstandingReturns() {
+  const { data } = await apiClient.get<StockIssueItem[]>(`${BASE}/reports/outstanding-returns/`)
+  return data
+}
+
+export async function fetchReportItemsIssued(params?: { date_from?: string; date_to?: string }) {
+  const { data } = await apiClient.get<StockIssueItem[]>(`${BASE}/reports/items-issued/`, { params })
+  return data
+}
+
+export async function fetchReportExpiredItems() {
+  const { data } = await apiClient.get<ExpiredItemRow[]>(`${BASE}/reports/expired-items/`)
+  return data
+}
+
+export async function fetchReportSupplierPurchases(params?: { supplier?: string; date_from?: string; date_to?: string }) {
+  const { data } = await apiClient.get<{
+    summary: { supplier_id: string; supplier_name: string; purchase_count: number; total_amount: string }[]
+    purchases: PurchaseListItem[]
+  }>(`${BASE}/reports/supplier-purchases/`, { params })
   return data
 }

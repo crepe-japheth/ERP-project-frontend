@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { DashboardPage } from './pages/DashboardPage'
 import { InventoryRoutes } from './pages/inventory'
+import { ReportsPage } from './pages/inventory/ReportsPage'
 import { LoginPage } from './pages/LoginPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
@@ -35,7 +36,7 @@ export default function App() {
         path="/notifications"
         element={
           <ProtectedRoute>
-            <PlaceholderPage title="Notifications" />
+            <Navigate to="/inventory/alerts" replace />
           </ProtectedRoute>
         }
       />
@@ -75,7 +76,7 @@ export default function App() {
         path="/reports"
         element={
           <ProtectedRoute>
-            <PlaceholderPage title="Reports" />
+            <ReportsPage />
           </ProtectedRoute>
         }
       />
