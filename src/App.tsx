@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { InventoryRoutes } from './pages/inventory'
 import { ReportsPage } from './pages/inventory/ReportsPage'
 import { LoginPage } from './pages/LoginPage'
+import { HRRoutes } from './pages/hr'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -65,10 +66,10 @@ export default function App() {
         }
       />
       <Route
-        path="/hr/:section"
+        path="/hr/*"
         element={
           <ProtectedRoute>
-            <PlaceholderPage description="Employees, attendance, leave, and payroll modules coming next." />
+            <HRRoutes />
           </ProtectedRoute>
         }
       />

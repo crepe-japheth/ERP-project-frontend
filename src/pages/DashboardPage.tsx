@@ -12,6 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { fetchAlertSummary, fetchReportValuation } from '../api/inventory'
+import { fetchHRSummary } from '../api/hr'
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -78,6 +79,7 @@ export function DashboardPage() {
   const [alertTotal, setAlertTotal] = useState(0)
   const [stockValue, setStockValue] = useState<string | null>(null)
   const [lowStockCount, setLowStockCount] = useState(0)
+  const [hrSummary, setHrSummary] = useState({ total_employees: 0, pending_leave: 0, today_present: 0 })
 
   useEffect(() => {
     fetchAlertSummary().then((s) => {
@@ -85,6 +87,7 @@ export function DashboardPage() {
       setLowStockCount((s.counts.minimum_stock ?? 0) + (s.counts.out_of_stock ?? 0))
     }).catch(() => {})
     fetchReportValuation().then((v) => setStockValue(v.total_value)).catch(() => {})
+    fetchHRSummary().then(setHrSummary).catch(() => {})
   }, [])
 
   const tickColor = isDark ? '#64748b' : '#94a3b8'
@@ -116,7 +119,7 @@ export function DashboardPage() {
           <Button variant="secondary" size="sm">
             New Purchase
           </Button>
-          <Button variant="secondary" size="sm" className="hidden sm:inline-flex">
+          <Button variant="secondary" size="sm" className="hidden sm:inline-flex" onClick={() => navigate('/hr/leave')}>
             Approve Leave
           </Button>
         </div>
@@ -125,8 +128,8 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <KpiCard
           title="Total Employees"
-          value={20}
-          change="+11.1%"
+          value={hrSummary.total_employees}
+          change={`${hrSummary.today_present} present today`}
           trend="up"
           icon={Users}
           iconBg={isDark ? '#064e3b' : '#ecfdf5'}
