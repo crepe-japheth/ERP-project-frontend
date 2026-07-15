@@ -43,6 +43,34 @@ export interface Position {
   is_active: boolean
 }
 
+export type ContractOptionCategory =
+  | 'work_type'
+  | 'shift'
+  | 'wage_type'
+  | 'payment_frequency'
+
+export interface ContractOption {
+  id: string
+  category: ContractOptionCategory
+  category_display: string
+  name: string
+  code: string
+  description: string
+  is_active: boolean
+}
+
+export interface AttendancePolicy {
+  id: string
+  name: string
+  work_start_time: string
+  work_end_time: string
+  break_minutes: number
+  late_grace_minutes: number
+  scheduled_hours: string
+  is_default: boolean
+  is_active: boolean
+}
+
 export interface EmergencyContact {
   id?: string
   name: string
@@ -173,12 +201,24 @@ export interface Attendance {
   notes: string
 }
 
+export interface AttendancePayload {
+  employee: string
+  date: string
+  clock_in: string | null
+  clock_out: string | null
+  status: string
+  working_hours?: string
+  notes?: string
+}
+
 export interface LeaveType {
   id: string
   name: string
   code: string
   days_per_year: number
   is_paid: boolean
+  description?: string
+  is_active?: boolean
 }
 
 export interface LeaveRequest {

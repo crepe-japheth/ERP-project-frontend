@@ -1,7 +1,11 @@
 import type {
   Allowance,
   Attendance,
+  AttendancePayload,
+  AttendancePolicy,
   Branch,
+  ContractOption,
+  ContractOptionCategory,
   Deduction,
   Department,
   Employee,
@@ -163,9 +167,18 @@ export async function fetchAttendance(params?: {
   return data
 }
 
-export async function createAttendance(payload: Partial<Attendance>) {
+export async function createAttendance(payload: Partial<AttendancePayload>) {
   const { data } = await apiClient.post<Attendance>(`${BASE}/attendance/`, payload)
   return data
+}
+
+export async function updateAttendance(id: string, payload: Partial<AttendancePayload>) {
+  const { data } = await apiClient.patch<Attendance>(`${BASE}/attendance/${id}/`, payload)
+  return data
+}
+
+export async function deleteAttendance(id: string) {
+  await apiClient.delete(`${BASE}/attendance/${id}/`)
 }
 
 export async function clockIn(employeeId: string, notes?: string) {
@@ -186,6 +199,80 @@ export async function clockOut(employeeId: string, notes?: string) {
 
 export async function fetchLeaveTypes() {
   const { data } = await apiClient.get<LeaveType[]>(`${BASE}/leave-types/`)
+  return data
+}
+
+export async function fetchContractOptions(params?: {
+  category?: ContractOptionCategory
+  search?: string
+}) {
+  const { data } = await apiClient.get<ContractOption[]>(
+    `${BASE}/settings/contract-options/`,
+    { params },
+  )
+  return data
+}
+
+export async function createContractOption(payload: Partial<ContractOption>) {
+  const { data } = await apiClient.post<ContractOption>(
+    `${BASE}/settings/contract-options/`,
+    payload,
+  )
+  return data
+}
+
+export async function updateContractOption(
+  id: string,
+  payload: Partial<ContractOption>,
+) {
+  const { data } = await apiClient.patch<ContractOption>(
+    `${BASE}/settings/contract-options/${id}/`,
+    payload,
+  )
+  return data
+}
+
+export async function deleteContractOption(id: string) {
+  await apiClient.delete(`${BASE}/settings/contract-options/${id}/`)
+}
+
+export async function fetchLeaveTypeSettings() {
+  const { data } = await apiClient.get<LeaveType[]>(`${BASE}/settings/leave-types/`)
+  return data
+}
+
+export async function createLeaveType(payload: Partial<LeaveType>) {
+  const { data } = await apiClient.post<LeaveType>(
+    `${BASE}/settings/leave-types/`,
+    payload,
+  )
+  return data
+}
+
+export async function updateLeaveType(id: string, payload: Partial<LeaveType>) {
+  const { data } = await apiClient.patch<LeaveType>(
+    `${BASE}/settings/leave-types/${id}/`,
+    payload,
+  )
+  return data
+}
+
+export async function deleteLeaveType(id: string) {
+  await apiClient.delete(`${BASE}/settings/leave-types/${id}/`)
+}
+
+export async function fetchAttendancePolicy() {
+  const { data } = await apiClient.get<AttendancePolicy>(
+    `${BASE}/settings/attendance-policy/`,
+  )
+  return data
+}
+
+export async function updateAttendancePolicy(payload: Partial<AttendancePolicy>) {
+  const { data } = await apiClient.patch<AttendancePolicy>(
+    `${BASE}/settings/attendance-policy/`,
+    payload,
+  )
   return data
 }
 

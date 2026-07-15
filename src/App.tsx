@@ -6,6 +6,7 @@ import { InventoryRoutes } from './pages/inventory'
 import { ReportsPage } from './pages/inventory/ReportsPage'
 import { LoginPage } from './pages/LoginPage'
 import { HRRoutes } from './pages/hr'
+import { HRSettingsPage } from './pages/hr/HRSettingsPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -85,7 +86,7 @@ export default function App() {
         path="/settings"
         element={
           <ProtectedRoute>
-            <PlaceholderPage title="Settings" />
+            <HRSettingsPage />
           </ProtectedRoute>
         }
       />
