@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { AlertsPage } from './AlertsPage'
 import { CategoriesPage } from './CategoriesPage'
+import { InventoryDashboardPage } from './InventoryDashboardPage'
 import { ProductsPage } from './ProductsPage'
 import { PurchasesPage } from './PurchasesPage'
 import { ReportsPage } from './ReportsPage'
@@ -26,6 +27,7 @@ function Section({
 export function InventoryRoutes() {
   return (
     <Routes>
+      <Route path="dashboard" element={<InventoryDashboardPage />} />
       <Route path="products" element={<Section permission="inventory.products.read"><ProductsPage /></Section>} />
       <Route path="categories" element={<Section permission="inventory.categories.read"><CategoriesPage /></Section>} />
       <Route path="suppliers" element={<Section permission="inventory.suppliers.read"><SuppliersPage /></Section>} />
@@ -34,7 +36,7 @@ export function InventoryRoutes() {
       <Route path="stock" element={<Section permission="inventory.stock.read"><StockPage /></Section>} />
       <Route path="alerts" element={<Section permission="inventory.stock.read"><AlertsPage /></Section>} />
       <Route path="reports" element={<Section permission="inventory.stock.read"><ReportsPage /></Section>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   )
 }

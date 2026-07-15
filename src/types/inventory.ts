@@ -232,6 +232,28 @@ export interface AlertSummary {
   counts: Record<string, number>
 }
 
+export interface InventoryDashboard {
+  product_count: number
+  supplier_count: number
+  open_purchase_count: number
+  stock_value: string
+  stock_alert_count: number
+  low_stock_count: number
+  recent_purchases: {
+    id: string
+    purchase_number: string
+    supplier_name: string
+    purchase_date: string
+    status: string
+    total_amount: string
+  }[]
+  valuation_by_category: {
+    category: string
+    product_count: number
+    total_value: string
+  }[]
+}
+
 export interface StockReportRow {
   product_id: string
   product_code: string

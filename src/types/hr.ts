@@ -13,6 +13,21 @@ export interface HRSummary {
   today_present: number
   paid_this_month: string
   active_contracts: number
+  upcoming_birthdays: UpcomingBirthday[]
+  department_distribution: {
+    department: string
+    employee_count: number
+  }[]
+}
+
+export interface UpcomingBirthday {
+  employee_id: string
+  employee_number: string
+  full_name: string
+  date_of_birth: string
+  next_birthday: string
+  days_until: number
+  department: string
 }
 
 export interface Branch {

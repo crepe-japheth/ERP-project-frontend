@@ -6,6 +6,7 @@ import { ContractsPage } from './ContractsPage'
 import { DeductionsPage } from './DeductionsPage'
 import { DepartmentsPage } from './DepartmentsPage'
 import { EmployeesPage } from './EmployeesPage'
+import { HRDashboardPage } from './HRDashboardPage'
 import { LeavePage } from './LeavePage'
 import { PayrollPage } from './PayrollPage'
 import { PayslipsPage } from './PayslipsPage'
@@ -27,6 +28,7 @@ function Section({
 export function HRRoutes() {
   return (
     <Routes>
+      <Route path="dashboard" element={<HRDashboardPage />} />
       <Route path="employees" element={<Section permission="hr.employees.read"><EmployeesPage /></Section>} />
       <Route path="departments" element={<Section permission="hr.departments.read"><DepartmentsPage /></Section>} />
       <Route path="contracts" element={<Section permission="hr.contracts.read"><ContractsPage /></Section>} />
@@ -36,7 +38,7 @@ export function HRRoutes() {
       <Route path="leave" element={<Section permission="hr.leave.read"><LeavePage /></Section>} />
       <Route path="payroll" element={<Section permission="hr.payroll.read"><PayrollPage /></Section>} />
       <Route path="payslips" element={<Section permission="hr.payroll.read"><PayslipsPage /></Section>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   )
 }

@@ -1,4 +1,4 @@
-import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
+import { Bell, Menu, Moon, Sun } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { cn } from '../../lib/cn'
@@ -37,13 +37,6 @@ export function Topbar({ title, onMenuClick }: TopbarProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-        <button
-          type="button"
-          className="hidden rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 sm:block dark:hover:bg-slate-800"
-          aria-label="Search"
-        >
-          <Search className="h-5 w-5" />
-        </button>
         <button
           type="button"
           className="relative rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"

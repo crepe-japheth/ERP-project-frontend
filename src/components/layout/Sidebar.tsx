@@ -10,7 +10,6 @@ import {
   LogOut,
   Package,
   PackageMinus,
-  Search,
   Settings,
   ShoppingCart,
   Truck,
@@ -32,7 +31,6 @@ interface NavItem {
   permissions?: string[]
   requireAll?: boolean
   personal?: boolean
-  management?: boolean
 }
 
 interface NavGroup {
@@ -42,9 +40,8 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    title: 'Main',
+    title: 'Personal',
     items: [
-      { label: 'Dashboard', to: '/', icon: LayoutDashboard, management: true },
       {
         label: 'My Workspace',
         to: '/my',
@@ -57,13 +54,23 @@ const navGroups: NavGroup[] = [
         icon: Bell,
         permissions: ['inventory.stock.read'],
       },
-      { label: 'Search', to: '/search', icon: Search, management: true },
-      { label: 'Calendar', to: '/calendar', icon: Calendar, management: true },
     ],
   },
   {
     title: 'Inventory',
     items: [
+      {
+        label: 'Inventory Dashboard',
+        to: '/inventory/dashboard',
+        icon: LayoutDashboard,
+        permissions: [
+          'inventory.products.read',
+          'inventory.categories.read',
+          'inventory.suppliers.read',
+          'inventory.purchases.read',
+          'inventory.stock.read',
+        ],
+      },
       { label: 'Products', to: '/inventory/products', icon: Package, permissions: ['inventory.products.read'] },
       { label: 'Categories', to: '/inventory/categories', icon: Boxes, permissions: ['inventory.categories.read'] },
       { label: 'Suppliers', to: '/inventory/suppliers', icon: Truck, permissions: ['inventory.suppliers.read'] },
@@ -77,6 +84,19 @@ const navGroups: NavGroup[] = [
   {
     title: 'Human Resources',
     items: [
+      {
+        label: 'HR Dashboard',
+        to: '/hr/dashboard',
+        icon: LayoutDashboard,
+        permissions: [
+          'hr.employees.read',
+          'hr.departments.read',
+          'hr.contracts.read',
+          'hr.attendance.read',
+          'hr.leave.read',
+          'hr.payroll.read',
+        ],
+      },
       { label: 'Employees', to: '/hr/employees', icon: Users, permissions: ['hr.employees.read'] },
       { label: 'Departments', to: '/hr/departments', icon: Building2, permissions: ['hr.departments.read'] },
       { label: 'Contracts', to: '/hr/contracts', icon: ClipboardList, permissions: ['hr.contracts.read'] },
@@ -126,9 +146,6 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
 
   const canSeeItem = (item: NavItem) => {
     if (item.personal) return Boolean(user?.employee_id)
-    if (item.management) {
-      return Boolean(user?.is_superuser || user?.permissions?.length)
-    }
     if (!item.permissions?.length) return true
     return item.requireAll
       ? item.permissions.every(hasPermission)

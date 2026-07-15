@@ -1,7 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
-import { DashboardPage } from './pages/DashboardPage'
 import { InventoryRoutes } from './pages/inventory'
 import { ReportsPage } from './pages/inventory/ReportsPage'
 import { LoginPage } from './pages/LoginPage'
@@ -45,25 +44,37 @@ function PermissionRoute({
 
 function HomeRoute() {
   const { user, hasPermission } = useAuth()
-  if (user?.is_superuser) return <DashboardPage />
+  if (user?.is_superuser) {
+    return <Navigate to="/inventory/dashboard" replace />
+  }
   if (
     hasPermission('core.users.read') &&
     hasPermission('core.roles.read')
   ) {
     return <Navigate to="/access-control" replace />
   }
+  const inventoryPermissions = [
+    'inventory.products.read',
+    'inventory.categories.read',
+    'inventory.suppliers.read',
+    'inventory.purchases.read',
+    'inventory.stock.read',
+  ]
+  if (inventoryPermissions.some(hasPermission)) {
+    return <Navigate to="/inventory/dashboard" replace />
+  }
+  const hrPermissions = [
+    'hr.employees.read',
+    'hr.departments.read',
+    'hr.contracts.read',
+    'hr.attendance.read',
+    'hr.leave.read',
+    'hr.payroll.read',
+  ]
+  if (hrPermissions.some(hasPermission)) {
+    return <Navigate to="/hr/dashboard" replace />
+  }
   const destinations = [
-    ['inventory.products.read', '/inventory/products'],
-    ['inventory.categories.read', '/inventory/categories'],
-    ['inventory.suppliers.read', '/inventory/suppliers'],
-    ['inventory.purchases.read', '/inventory/purchases'],
-    ['inventory.stock.read', '/inventory/stock'],
-    ['hr.employees.read', '/hr/employees'],
-    ['hr.departments.read', '/hr/departments'],
-    ['hr.contracts.read', '/hr/contracts'],
-    ['hr.attendance.read', '/hr/attendance'],
-    ['hr.leave.read', '/hr/leave'],
-    ['hr.payroll.read', '/hr/payroll'],
     ['core.settings.read', '/settings'],
   ] as const
   const destination = destinations.find(([permission]) =>
@@ -91,22 +102,6 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Navigate to="/inventory/alerts" replace />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/search"
-        element={
-          <ProtectedRoute>
-            <PlaceholderPage title="Search" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/calendar"
-        element={
-          <ProtectedRoute>
-            <PlaceholderPage title="Calendar" />
           </ProtectedRoute>
         }
       />

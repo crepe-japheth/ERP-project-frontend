@@ -2,6 +2,7 @@ import type {
   AlertSummary,
   Category,
   ExpiredItemRow,
+  InventoryDashboard,
   PaginatedResponse,
   Product,
   Purchase,
@@ -22,6 +23,11 @@ import type {
 import { apiClient } from './client'
 
 const BASE = '/inventory'
+
+export async function fetchInventoryDashboard() {
+  const { data } = await apiClient.get<InventoryDashboard>(`${BASE}/dashboard/`)
+  return data
+}
 
 export async function fetchCategories(params?: { search?: string; page?: number }) {
   const { data } = await apiClient.get<PaginatedResponse<Category>>(`${BASE}/categories/`, { params })
