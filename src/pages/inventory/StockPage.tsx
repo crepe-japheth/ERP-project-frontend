@@ -15,6 +15,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Product, StockAdjustment, StockLevel, StockMovement } from '../../types/inventory'
 import { cn } from '../../lib/cn'
 
@@ -40,6 +41,8 @@ const MOVEMENT_TYPES = [
 ]
 
 export function StockPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('inventory.stock.create')
   const [tab, setTab] = useState<Tab>('levels')
   const [stock, setStock] = useState<StockLevel[]>([])
   const [movements, setMovements] = useState<StockMovement[]>([])
@@ -108,7 +111,7 @@ export function StockPage() {
             <AlertTriangle className="h-4 w-4" /> Low Stock
           </Button>
         )}
-        {tab === 'adjustments' && (
+        {canCreate && tab === 'adjustments' && (
           <Button size="sm" onClick={openAdjustment}>+ Adjustment</Button>
         )}
       </PageHeader>

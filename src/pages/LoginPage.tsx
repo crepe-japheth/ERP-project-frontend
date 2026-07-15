@@ -9,8 +9,8 @@ import { cn } from '../lib/cn'
 export function LoginPage() {
   const { user, loading, login } = useAuth()
   const { isDark } = useTheme()
-  const [username, setUsername] = useState('admin')
-  const [password, setPassword] = useState('admin12345')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -31,7 +31,7 @@ export function LoginPage() {
     try {
       await login(username, password)
     } catch {
-      setError('Invalid username or password. Try admin / admin12345')
+      setError('Invalid username or password.')
     } finally {
       setSubmitting(false)
     }
@@ -98,7 +98,7 @@ export function LoginPage() {
 
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome back</h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Sign in to your ERP admin account
+            Sign in to your ERP account
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -151,9 +151,6 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
-            Default credentials: admin / admin12345
-          </p>
         </div>
       </div>
     </div>

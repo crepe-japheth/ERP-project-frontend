@@ -18,6 +18,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Product, Purchase, PurchaseListItem, Supplier } from '../../types/inventory'
 
 const STATUS_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'info' | 'danger'> = {
@@ -49,6 +50,10 @@ function purchaseStatusVariant(status: string) {
 }
 
 export function PurchasesPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('inventory.purchases.create')
+  const canDelete = hasPermission('inventory.purchases.delete')
+  const canApprove = hasPermission('inventory.purchases.approve')
   const [purchases, setPurchases] = useState<PurchaseListItem[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -180,8 +185,8 @@ export function PurchasesPage() {
       <PageHeader
         title="Purchases"
         description="Create purchase orders, approve, and receive goods into stock."
-        actionLabel="+ New Purchase"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ New Purchase' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -229,12 +234,12 @@ export function PurchasesPage() {
                 <button type="button" onClick={() => openDetail(p.id)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600" title="View">
                   <Eye className="h-4 w-4" />
                 </button>
-                {p.status === 'draft' && (
+                {canApprove && p.status === 'draft' && (
                   <button type="button" onClick={() => handleApprove(p.id)} className="rounded-lg p-1.5 text-slate-400 hover:text-blue-600" title="Approve">
                     <CheckCircle className="h-4 w-4" />
                   </button>
                 )}
-                {(p.status === 'approved' || p.status === 'partially_received') && (
+                {canApprove && (p.status === 'approved' || p.status === 'partially_received') && (
                   <button type="button" onClick={() => openReceive(p.id)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600" title="Receive">
                     <PackageCheck className="h-4 w-4" />
                   </button>
@@ -328,13 +333,17 @@ export function PurchasesPage() {
             <div className="flex gap-2">
               {selected.status === 'draft' && (
                 <>
+                  {canApprove && (
                   <Button size="sm" onClick={() => handleApprove(selected.id)}>Approve</Button>
+                  )}
+                  {canDelete && (
                   <Button variant="danger" size="sm" onClick={() => handleCancel(selected.id)}>
                     <XCircle className="h-4 w-4" /> Cancel
                   </Button>
+                  )}
                 </>
               )}
-              {(selected.status === 'approved' || selected.status === 'partially_received') && (
+              {canApprove && (selected.status === 'approved' || selected.status === 'partially_received') && (
                 <Button size="sm" onClick={() => { setDetailOpen(false); openReceive(selected.id) }}>
                   <PackageCheck className="h-4 w-4" /> Receive Goods
                 </Button>

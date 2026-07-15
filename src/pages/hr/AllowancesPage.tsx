@@ -15,6 +15,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import { CONDITION_FIELDS, CONDITION_OPERATORS, type Allowance, type Employee } from '../../types/hr'
 
 const empty = {
@@ -33,6 +34,10 @@ const empty = {
 }
 
 export function AllowancesPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.payroll.create')
+  const canUpdate = hasPermission('hr.payroll.update')
+  const canDelete = hasPermission('hr.payroll.delete')
   const [items, setItems] = useState<Allowance[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
@@ -106,7 +111,7 @@ export function AllowancesPage() {
 
   return (
     <DashboardLayout title="Allowances">
-      <PageHeader title="Allowances" description="Transport, meal, and other employee allowances." actionLabel="+ Add Allowance" onAction={openCreate} />
+      <PageHeader title="Allowances" description="Transport, meal, and other employee allowances." actionLabel={canCreate ? '+ Add Allowance' : undefined} onAction={canCreate ? openCreate : undefined} />
       <div className="relative mb-4 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input className="pl-9" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -124,8 +129,8 @@ export function AllowancesPage() {
             <TableCell><Badge variant={a.is_taxable ? 'warning' : 'success'}>{a.is_taxable ? 'Yes' : 'No'}</Badge></TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="sm" onClick={async () => { if (confirm('Disable allowance?')) { await deleteAllowance(a.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                {canUpdate && <Button variant="ghost" size="sm" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>}
+                {canDelete && <Button variant="ghost" size="sm" onClick={async () => { if (confirm('Disable allowance?')) { await deleteAllowance(a.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
               </div>
             </TableCell>
           </TableRow>

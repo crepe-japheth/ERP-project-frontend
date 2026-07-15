@@ -7,6 +7,8 @@ import { ReportsPage } from './pages/inventory/ReportsPage'
 import { LoginPage } from './pages/LoginPage'
 import { HRRoutes } from './pages/hr'
 import { HRSettingsPage } from './pages/hr/HRSettingsPage'
+import { AccessControlPage } from './pages/AccessControlPage'
+import { MyWorkspacePage } from './pages/MyWorkspacePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -22,6 +24,56 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function PermissionRoute({
+  children,
+  permissions,
+  requireAll = false,
+}: {
+  children: React.ReactNode
+  permissions: string[]
+  requireAll?: boolean
+}) {
+  const { user, hasPermission } = useAuth()
+  const allowed =
+    user?.is_superuser ||
+    (requireAll
+      ? permissions.every(hasPermission)
+      : permissions.some(hasPermission))
+  if (!allowed) return <Navigate to={user?.employee_id ? '/my' : '/'} replace />
+  return <>{children}</>
+}
+
+function HomeRoute() {
+  const { user, hasPermission } = useAuth()
+  if (user?.is_superuser) return <DashboardPage />
+  if (
+    hasPermission('core.users.read') &&
+    hasPermission('core.roles.read')
+  ) {
+    return <Navigate to="/access-control" replace />
+  }
+  const destinations = [
+    ['inventory.products.read', '/inventory/products'],
+    ['inventory.categories.read', '/inventory/categories'],
+    ['inventory.suppliers.read', '/inventory/suppliers'],
+    ['inventory.purchases.read', '/inventory/purchases'],
+    ['inventory.stock.read', '/inventory/stock'],
+    ['hr.employees.read', '/hr/employees'],
+    ['hr.departments.read', '/hr/departments'],
+    ['hr.contracts.read', '/hr/contracts'],
+    ['hr.attendance.read', '/hr/attendance'],
+    ['hr.leave.read', '/hr/leave'],
+    ['hr.payroll.read', '/hr/payroll'],
+    ['core.settings.read', '/settings'],
+  ] as const
+  const destination = destinations.find(([permission]) =>
+    hasPermission(permission),
+  )
+  if (destination) return <Navigate to={destination[1]} replace />
+  if (user?.employee_id) return <Navigate to="/my" replace />
+  return <PlaceholderPage title="No access has been assigned to this account." />
+}
+
 export default function App() {
   return (
     <Routes>
@@ -30,7 +82,7 @@ export default function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <HomeRoute />
           </ProtectedRoute>
         }
       />
@@ -62,7 +114,17 @@ export default function App() {
         path="/inventory/*"
         element={
           <ProtectedRoute>
-            <InventoryRoutes />
+            <PermissionRoute
+              permissions={[
+                'inventory.products.read',
+                'inventory.categories.read',
+                'inventory.suppliers.read',
+                'inventory.purchases.read',
+                'inventory.stock.read',
+              ]}
+            >
+              <InventoryRoutes />
+            </PermissionRoute>
           </ProtectedRoute>
         }
       />
@@ -70,7 +132,18 @@ export default function App() {
         path="/hr/*"
         element={
           <ProtectedRoute>
-            <HRRoutes />
+            <PermissionRoute
+              permissions={[
+                'hr.employees.read',
+                'hr.departments.read',
+                'hr.contracts.read',
+                'hr.attendance.read',
+                'hr.leave.read',
+                'hr.payroll.read',
+              ]}
+            >
+              <HRRoutes />
+            </PermissionRoute>
           </ProtectedRoute>
         }
       />
@@ -78,7 +151,30 @@ export default function App() {
         path="/reports"
         element={
           <ProtectedRoute>
-            <ReportsPage />
+            <PermissionRoute permissions={['inventory.stock.read']}>
+              <ReportsPage />
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my"
+        element={
+          <ProtectedRoute>
+            <MyWorkspacePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/access-control"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute
+              permissions={['core.users.read', 'core.roles.read']}
+              requireAll
+            >
+              <AccessControlPage />
+            </PermissionRoute>
           </ProtectedRoute>
         }
       />
@@ -86,7 +182,9 @@ export default function App() {
         path="/settings"
         element={
           <ProtectedRoute>
-            <HRSettingsPage />
+            <PermissionRoute permissions={['core.settings.read']}>
+              <HRSettingsPage />
+            </PermissionRoute>
           </ProtectedRoute>
         }
       />

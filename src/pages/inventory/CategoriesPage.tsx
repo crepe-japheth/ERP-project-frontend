@@ -12,11 +12,16 @@ import { DataTable, TableCell, TableRow } from '../../components/ui/DataTable'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { useAuth } from '../../context/AuthContext'
 import type { Category } from '../../types/inventory'
 
 const emptyForm = { name: '', code: '', description: '', parent: '' }
 
 export function CategoriesPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('inventory.categories.create')
+  const canUpdate = hasPermission('inventory.categories.update')
+  const canDelete = hasPermission('inventory.categories.delete')
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -93,8 +98,8 @@ export function CategoriesPage() {
       <PageHeader
         title="Categories"
         description="Organize products into categories."
-        actionLabel="+ Add Category"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ Add Category' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
 
       <div className="relative mb-4 max-w-md">
@@ -126,12 +131,12 @@ export function CategoriesPage() {
             <TableCell>{c.product_count}</TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <button type="button" onClick={() => openEdit(c)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600">
+                {canUpdate && <button type="button" onClick={() => openEdit(c)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600">
                   <Pencil className="h-4 w-4" />
-                </button>
-                <button type="button" onClick={() => handleDelete(c)} className="rounded-lg p-1.5 text-slate-400 hover:text-red-600">
+                </button>}
+                {canDelete && <button type="button" onClick={() => handleDelete(c)} className="rounded-lg p-1.5 text-slate-400 hover:text-red-600">
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </button>}
               </div>
             </TableCell>
           </TableRow>

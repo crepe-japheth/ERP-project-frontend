@@ -14,6 +14,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Employee, PayrollPeriod, Payslip } from '../../types/hr'
 
 function money(v: string | number) {
@@ -21,6 +22,8 @@ function money(v: string | number) {
 }
 
 export function PayslipsPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.payroll.create')
   const [periods, setPeriods] = useState<PayrollPeriod[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [payslips, setPayslips] = useState<Payslip[]>([])
@@ -115,8 +118,8 @@ export function PayslipsPage() {
       <PageHeader
         title="Payslips"
         description="Employee payslips generated from payroll."
-        actionLabel="+ Individual Payslip"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ Individual Payslip' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
       <div className="mb-4 max-w-xs">
         <Select

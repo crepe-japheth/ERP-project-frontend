@@ -8,7 +8,20 @@ export interface User {
   is_active: boolean
   date_joined: string
   organization_id: string | null
-  permissions?: string[]
+  is_superuser: boolean
+  permissions: string[]
+  direct_permission_ids: string[]
+  employee_id: string | null
+}
+
+export interface Permission {
+  id: string
+  code: string
+  name: string
+  module: string
+  action: string
+  description: string
+  is_active: boolean
 }
 
 export interface AuthTokens {

@@ -15,6 +15,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import { CONDITION_FIELDS, CONDITION_OPERATORS, type Deduction, type Employee } from '../../types/hr'
 
 const empty = {
@@ -34,6 +35,10 @@ const empty = {
 }
 
 export function DeductionsPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.payroll.create')
+  const canUpdate = hasPermission('hr.payroll.update')
+  const canDelete = hasPermission('hr.payroll.delete')
   const [items, setItems] = useState<Deduction[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,7 +100,7 @@ export function DeductionsPage() {
 
   return (
     <DashboardLayout title="Deductions">
-      <PageHeader title="Deductions" description="Tax, social security, and other deductions." actionLabel="+ Add Deduction" onAction={openCreate} />
+      <PageHeader title="Deductions" description="Tax, social security, and other deductions." actionLabel={canCreate ? '+ Add Deduction' : undefined} onAction={canCreate ? openCreate : undefined} />
       <div className="relative mb-4 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input className="pl-9" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -117,8 +122,8 @@ export function DeductionsPage() {
             <TableCell>{d.is_condition_based ? 'Condition' : 'Fixed'}</TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="sm" onClick={async () => { if (confirm('Disable deduction?')) { await deleteDeduction(d.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                {canUpdate && <Button variant="ghost" size="sm" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>}
+                {canDelete && <Button variant="ghost" size="sm" onClick={async () => { if (confirm('Disable deduction?')) { await deleteDeduction(d.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
               </div>
             </TableCell>
           </TableRow>

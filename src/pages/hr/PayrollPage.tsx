@@ -15,6 +15,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Employee, PayrollPeriod } from '../../types/hr'
 
 function money(v: string | number) {
@@ -29,6 +30,9 @@ function statusBadge(s: string) {
 }
 
 export function PayrollPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.payroll.create')
+  const canApprove = hasPermission('hr.payroll.approve')
   const [periods, setPeriods] = useState<PayrollPeriod[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
@@ -89,11 +93,11 @@ export function PayrollPage() {
       <PageHeader
         title="Payroll"
         description="Create a payroll batch and automatically generate one payslip per included employee."
-        actionLabel="+ Create Payroll"
-        onAction={() => {
+        actionLabel={canCreate ? '+ Create Payroll' : undefined}
+        onAction={canCreate ? () => {
           setCreateExcludeIds([])
           setModalOpen(true)
-        }}
+        } : undefined}
       />
       <DataTable loading={loading} isEmpty={!loading && periods.length === 0} emptyMessage="No payroll periods." columns={[
         { key: 'name', label: 'Payroll' }, { key: 'dates', label: 'Period' }, { key: 'gross', label: 'Gross' },
@@ -112,12 +116,12 @@ export function PayrollPage() {
             <TableCell><Badge variant={statusBadge(p.status)}>{p.status.replace('_', ' ')}</Badge></TableCell>
             <TableCell>
               <div className="flex gap-1">
-                {p.status === 'draft' && (
+                {canCreate && p.status === 'draft' && (
                   <Button variant="ghost" size="sm" title="Recalculate payroll" onClick={() => { setGenPeriod(p); setExcludeIds(p.excluded_employee_ids || []); setGenOpen(true) }}>
                     <RefreshCw className="h-4 w-4 text-emerald-600" />
                   </Button>
                 )}
-                {p.status !== 'paid' && (
+                {canApprove && p.status !== 'paid' && (
                   <Button variant="ghost" size="sm" title="Advance" onClick={async () => { try { await advancePayrollPeriod(p.id); load() } catch { alert('Cannot advance.') } }}>
                     <ArrowRight className="h-4 w-4" />
                   </Button>

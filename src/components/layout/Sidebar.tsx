@@ -15,6 +15,8 @@ import {
   ShoppingCart,
   Truck,
   Users,
+  UserCircle,
+  UserCog,
   Wallet,
   X,
 } from 'lucide-react'
@@ -27,6 +29,10 @@ interface NavItem {
   to: string
   icon: React.ComponentType<{ className?: string }>
   badge?: number
+  permissions?: string[]
+  requireAll?: boolean
+  personal?: boolean
+  management?: boolean
 }
 
 interface NavGroup {
@@ -38,43 +44,61 @@ const navGroups: NavGroup[] = [
   {
     title: 'Main',
     items: [
-      { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-      { label: 'Notifications', to: '/inventory/alerts', icon: Bell },
-      { label: 'Search', to: '/search', icon: Search },
-      { label: 'Calendar', to: '/calendar', icon: Calendar },
+      { label: 'Dashboard', to: '/', icon: LayoutDashboard, management: true },
+      {
+        label: 'My Workspace',
+        to: '/my',
+        icon: UserCircle,
+        personal: true,
+      },
+      {
+        label: 'Notifications',
+        to: '/inventory/alerts',
+        icon: Bell,
+        permissions: ['inventory.stock.read'],
+      },
+      { label: 'Search', to: '/search', icon: Search, management: true },
+      { label: 'Calendar', to: '/calendar', icon: Calendar, management: true },
     ],
   },
   {
     title: 'Inventory',
     items: [
-      { label: 'Products', to: '/inventory/products', icon: Package },
-      { label: 'Categories', to: '/inventory/categories', icon: Boxes },
-      { label: 'Suppliers', to: '/inventory/suppliers', icon: Truck },
-      { label: 'Purchases', to: '/inventory/purchases', icon: ShoppingCart },
-      { label: 'Stock Issues', to: '/inventory/issues', icon: PackageMinus },
-      { label: 'Stock', to: '/inventory/stock', icon: ClipboardList },
-      { label: 'Alerts', to: '/inventory/alerts', icon: Bell },
-      { label: 'Reports', to: '/inventory/reports', icon: BarChart3 },
+      { label: 'Products', to: '/inventory/products', icon: Package, permissions: ['inventory.products.read'] },
+      { label: 'Categories', to: '/inventory/categories', icon: Boxes, permissions: ['inventory.categories.read'] },
+      { label: 'Suppliers', to: '/inventory/suppliers', icon: Truck, permissions: ['inventory.suppliers.read'] },
+      { label: 'Purchases', to: '/inventory/purchases', icon: ShoppingCart, permissions: ['inventory.purchases.read'] },
+      { label: 'Stock Issues', to: '/inventory/issues', icon: PackageMinus, permissions: ['inventory.stock.read'] },
+      { label: 'Stock', to: '/inventory/stock', icon: ClipboardList, permissions: ['inventory.stock.read'] },
+      { label: 'Alerts', to: '/inventory/alerts', icon: Bell, permissions: ['inventory.stock.read'] },
+      { label: 'Reports', to: '/inventory/reports', icon: BarChart3, permissions: ['inventory.stock.read'] },
     ],
   },
   {
     title: 'Human Resources',
     items: [
-      { label: 'Employees', to: '/hr/employees', icon: Users },
-      { label: 'Departments', to: '/hr/departments', icon: Building2 },
-      { label: 'Contracts', to: '/hr/contracts', icon: ClipboardList },
-      { label: 'Allowances', to: '/hr/allowances', icon: Wallet },
-      { label: 'Deductions', to: '/hr/deductions', icon: PackageMinus },
-      { label: 'Attendance', to: '/hr/attendance', icon: Calendar },
-      { label: 'Leave', to: '/hr/leave', icon: ClipboardList },
-      { label: 'Payroll', to: '/hr/payroll', icon: Wallet },
-      { label: 'Payslips', to: '/hr/payslips', icon: BarChart3 },
+      { label: 'Employees', to: '/hr/employees', icon: Users, permissions: ['hr.employees.read'] },
+      { label: 'Departments', to: '/hr/departments', icon: Building2, permissions: ['hr.departments.read'] },
+      { label: 'Contracts', to: '/hr/contracts', icon: ClipboardList, permissions: ['hr.contracts.read'] },
+      { label: 'Allowances', to: '/hr/allowances', icon: Wallet, permissions: ['hr.payroll.read'] },
+      { label: 'Deductions', to: '/hr/deductions', icon: PackageMinus, permissions: ['hr.payroll.read'] },
+      { label: 'Attendance', to: '/hr/attendance', icon: Calendar, permissions: ['hr.attendance.read'] },
+      { label: 'Leave', to: '/hr/leave', icon: ClipboardList, permissions: ['hr.leave.read'] },
+      { label: 'Payroll', to: '/hr/payroll', icon: Wallet, permissions: ['hr.payroll.read'] },
+      { label: 'Payslips', to: '/hr/payslips', icon: BarChart3, permissions: ['hr.payroll.read'] },
     ],
   },
   {
     title: 'System',
     items: [
-      { label: 'Settings', to: '/settings', icon: Settings },
+      {
+        label: 'User Access',
+        to: '/access-control',
+        icon: UserCog,
+        permissions: ['core.users.read', 'core.roles.read'],
+        requireAll: true,
+      },
+      { label: 'Settings', to: '/settings', icon: Settings, permissions: ['core.settings.read'] },
     ],
   },
 ]
@@ -87,7 +111,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: SidebarProps) {
-  const { user, logout } = useAuth()
+  const { user, logout, hasPermission } = useAuth()
   const displayName =
     user?.first_name && user?.last_name
       ? `${user.first_name} ${user.last_name}`
@@ -99,6 +123,23 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
     .join('')
     .slice(0, 2)
     .toUpperCase()
+
+  const canSeeItem = (item: NavItem) => {
+    if (item.personal) return Boolean(user?.employee_id)
+    if (item.management) {
+      return Boolean(user?.is_superuser || user?.permissions?.length)
+    }
+    if (!item.permissions?.length) return true
+    return item.requireAll
+      ? item.permissions.every(hasPermission)
+      : item.permissions.some(hasPermission)
+  }
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(canSeeItem),
+    }))
+    .filter((group) => group.items.length > 0)
 
   return (
     <aside
@@ -121,7 +162,9 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
                 ERP Suite
               </p>
               <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                Admin Dashboard
+                {user?.employee_id && !user.permissions?.length && !user.is_superuser
+                  ? 'Employee Portal'
+                  : 'Management Workspace'}
               </p>
             </div>
           )}
@@ -136,7 +179,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {navGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.title} className="mb-5">
             {(!collapsed || mobileOpen) && (
               <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">

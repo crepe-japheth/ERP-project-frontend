@@ -18,6 +18,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type {
   ContractOption,
   Department,
@@ -39,6 +40,10 @@ function statusBadge(s: string) {
 }
 
 export function ContractsPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.contracts.create')
+  const canUpdate = hasPermission('hr.contracts.update')
+  const canDelete = hasPermission('hr.contracts.delete')
   const [contracts, setContracts] = useState<EmploymentContract[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
@@ -115,7 +120,7 @@ export function ContractsPage() {
 
   return (
     <DashboardLayout title="Contracts">
-      <PageHeader title="Contracts" description="Employee contract management." actionLabel="+ Add Contract" onAction={openCreate} />
+      <PageHeader title="Contracts" description="Employee contract management." actionLabel={canCreate ? '+ Add Contract' : undefined} onAction={canCreate ? openCreate : undefined} />
       <div className="relative mb-4 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input className="pl-9" placeholder="Search contracts..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -133,8 +138,8 @@ export function ContractsPage() {
             <TableCell><Badge variant={statusBadge(c.status)}>{c.status}</Badge></TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="sm" onClick={async () => { if (confirm('Terminate/disable contract?')) { await deleteContract(c.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                {canUpdate && <Button variant="ghost" size="sm" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>}
+                {canDelete && <Button variant="ghost" size="sm" onClick={async () => { if (confirm('Terminate/disable contract?')) { await deleteContract(c.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
               </div>
             </TableCell>
           </TableRow>

@@ -18,6 +18,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Employee, LeaveRequest, LeaveType } from '../../types/hr'
 
 const emptyForm = {
@@ -37,6 +38,11 @@ function statusBadge(status: string) {
 }
 
 export function LeavePage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.leave.create')
+  const canUpdate = hasPermission('hr.leave.update')
+  const canApprove = hasPermission('hr.leave.approve')
+  const canReject = hasPermission('hr.leave.reject')
   const [requests, setRequests] = useState<LeaveRequest[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([])
@@ -126,8 +132,8 @@ export function LeavePage() {
       <PageHeader
         title="Leave Management"
         description="Request, approve, and track employee leave."
-        actionLabel="+ New Request"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ New Request' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
 
       <div className="mb-4 flex flex-wrap gap-3">
@@ -184,17 +190,17 @@ export function LeavePage() {
             </TableCell>
             <TableCell>
               <div className="flex gap-1">
-                {req.status === 'pending' && (
+                {req.status === 'pending' && (canApprove || canReject) && (
                   <>
-                    <Button variant="ghost" size="sm" title="Approve" onClick={() => handleApprove(req.id)}>
+                    {canApprove && <Button variant="ghost" size="sm" title="Approve" onClick={() => handleApprove(req.id)}>
                       <Check className="h-4 w-4 text-emerald-600" />
-                    </Button>
-                    <Button variant="ghost" size="sm" title="Reject" onClick={() => handleReject(req.id)}>
+                    </Button>}
+                    {canReject && <Button variant="ghost" size="sm" title="Reject" onClick={() => handleReject(req.id)}>
                       <X className="h-4 w-4 text-red-500" />
-                    </Button>
+                    </Button>}
                   </>
                 )}
-                {(req.status === 'draft' || req.status === 'pending') && (
+                {canUpdate && (req.status === 'draft' || req.status === 'pending') && (
                   <Button variant="ghost" size="sm" title="Cancel" onClick={() => handleCancel(req.id)}>
                     <X className="h-4 w-4" />
                   </Button>

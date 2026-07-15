@@ -14,6 +14,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Supplier } from '../../types/inventory'
 
 const emptyForm = {
@@ -28,6 +29,10 @@ const emptyForm = {
 }
 
 export function SuppliersPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('inventory.suppliers.create')
+  const canUpdate = hasPermission('inventory.suppliers.update')
+  const canDelete = hasPermission('inventory.suppliers.delete')
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -105,8 +110,8 @@ export function SuppliersPage() {
       <PageHeader
         title="Suppliers"
         description="Manage vendor and supplier information."
-        actionLabel="+ Add Supplier"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ Add Supplier' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
 
       <div className="relative mb-4 max-w-md">
@@ -144,12 +149,12 @@ export function SuppliersPage() {
             </TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <button type="button" onClick={() => openEdit(s)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600">
+                {canUpdate && <button type="button" onClick={() => openEdit(s)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600">
                   <Pencil className="h-4 w-4" />
-                </button>
-                <button type="button" onClick={() => handleDelete(s)} className="rounded-lg p-1.5 text-slate-400 hover:text-red-600">
+                </button>}
+                {canDelete && <button type="button" onClick={() => handleDelete(s)} className="rounded-lg p-1.5 text-slate-400 hover:text-red-600">
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </button>}
               </div>
             </TableCell>
           </TableRow>

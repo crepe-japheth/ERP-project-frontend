@@ -20,6 +20,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import { cn } from '../../lib/cn'
 import type {
   AttendancePolicy,
@@ -38,6 +39,10 @@ const categoryOptions = [
 ]
 
 export function HRSettingsPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('core.settings.create')
+  const canUpdate = hasPermission('core.settings.update')
+  const canDelete = hasPermission('core.settings.delete')
   const [tab, setTab] = useState<SettingsTab>('contract')
   const [options, setOptions] = useState<ContractOption[]>([])
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([])
@@ -223,11 +228,11 @@ export function HRSettingsPage() {
 
       {tab === 'contract' && (
         <>
-          <div className="mb-4 flex justify-end">
+          {canCreate && <div className="mb-4 flex justify-end">
             <Button onClick={() => openOption()}>
               <Plus className="h-4 w-4" /> Add Option
             </Button>
-          </div>
+          </div>}
           <DataTable
             loading={loading}
             isEmpty={!loading && options.length === 0}
@@ -248,14 +253,14 @@ export function HRSettingsPage() {
                 <TableCell>{option.description || '—'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button
+                    {canUpdate && <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => openOption(option)}
                     >
                       <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
+                    </Button>}
+                    {canDelete && <Button
                       variant="ghost"
                       size="sm"
                       onClick={async () => {
@@ -265,7 +270,7 @@ export function HRSettingsPage() {
                       }}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
+                    </Button>}
                   </div>
                 </TableCell>
               </TableRow>
@@ -276,11 +281,11 @@ export function HRSettingsPage() {
 
       {tab === 'leave' && (
         <>
-          <div className="mb-4 flex justify-end">
+          {canCreate && <div className="mb-4 flex justify-end">
             <Button onClick={() => openLeave()}>
               <Plus className="h-4 w-4" /> Add Leave Type
             </Button>
-          </div>
+          </div>}
           <DataTable
             loading={loading}
             isEmpty={!loading && leaveTypes.length === 0}
@@ -301,14 +306,14 @@ export function HRSettingsPage() {
                 <TableCell>{leaveType.is_paid ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button
+                    {canUpdate && <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => openLeave(leaveType)}
                     >
                       <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
+                    </Button>}
+                    {canDelete && <Button
                       variant="ghost"
                       size="sm"
                       onClick={async () => {
@@ -318,7 +323,7 @@ export function HRSettingsPage() {
                       }}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
+                    </Button>}
                   </div>
                 </TableCell>
               </TableRow>
@@ -394,11 +399,11 @@ export function HRSettingsPage() {
               }
             />
           </div>
-          <div className="mt-5 flex justify-end">
+          {canUpdate && <div className="mt-5 flex justify-end">
             <Button onClick={savePolicy} disabled={saving}>
               {saving ? 'Saving...' : 'Save Working Hours'}
             </Button>
-          </div>
+          </div>}
         </Card>
       )}
 

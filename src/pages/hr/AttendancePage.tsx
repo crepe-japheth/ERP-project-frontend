@@ -17,6 +17,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Attendance, Employee } from '../../types/hr'
 
 function formatTime(iso: string | null) {
@@ -25,6 +26,10 @@ function formatTime(iso: string | null) {
 }
 
 export function AttendancePage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.attendance.create')
+  const canUpdate = hasPermission('hr.attendance.update')
+  const canDelete = hasPermission('hr.attendance.delete')
   const [records, setRecords] = useState<Attendance[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
@@ -116,9 +121,10 @@ export function AttendancePage() {
       <PageHeader
         title="Attendance"
         description="Clock in/out, manually record previous dates, and manage hours worked."
-        actionLabel="+ Manual Attendance"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ Manual Attendance' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
+      {canCreate && (
       <Card className="mb-6 p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
@@ -129,12 +135,12 @@ export function AttendancePage() {
               onChange={(e) => setSelectedEmployee(e.target.value)}
             />
           </div>
-          <Button disabled={actionLoading || !selectedEmployee} onClick={async () => {
+          {canCreate && <Button disabled={actionLoading || !selectedEmployee} onClick={async () => {
             setActionLoading(true)
             try { await clockIn(selectedEmployee); load() } catch { alert('Clock-in failed.') } finally { setActionLoading(false) }
           }}>
             <LogIn className="h-4 w-4" /> Clock In
-          </Button>
+          </Button>}
           <Button variant="secondary" disabled={actionLoading || !selectedEmployee} onClick={async () => {
             setActionLoading(true)
             try { await clockOut(selectedEmployee); load() } catch { alert('Clock-out failed.') } finally { setActionLoading(false) }
@@ -143,6 +149,7 @@ export function AttendancePage() {
           </Button>
         </div>
       </Card>
+      )}
       <div className="relative mb-4 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input className="pl-9" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -164,10 +171,10 @@ export function AttendancePage() {
             <TableCell>{r.hours_worked || r.working_hours}h</TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>
+                {canUpdate && <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>
                   <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
+                </Button>}
+                {canDelete && <Button
                   variant="ghost"
                   size="sm"
                   onClick={async () => {
@@ -177,7 +184,7 @@ export function AttendancePage() {
                   }}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
+                </Button>}
               </div>
             </TableCell>
           </TableRow>

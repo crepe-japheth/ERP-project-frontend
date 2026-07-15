@@ -17,6 +17,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import { cn } from '../../lib/cn'
 import type { Department, EmergencyContact, Employee, Position } from '../../types/hr'
 
@@ -50,6 +51,10 @@ const emptyForm = {
 }
 
 export function EmployeesPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.employees.create')
+  const canUpdate = hasPermission('hr.employees.update')
+  const canDelete = hasPermission('hr.employees.delete')
   const [employees, setEmployees] = useState<Employee[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [positions, setPositions] = useState<Position[]>([])
@@ -166,7 +171,7 @@ export function EmployeesPage() {
 
   return (
     <DashboardLayout title="Employees">
-      <PageHeader title="Employees" description="Personal, work, and bank information." actionLabel="+ Add Employee" onAction={openCreate} />
+      <PageHeader title="Employees" description="Personal, work, and bank information." actionLabel={canCreate ? '+ Add Employee' : undefined} onAction={canCreate ? openCreate : undefined} />
       <div className="relative mb-4 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input placeholder="Search employees..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
@@ -184,8 +189,8 @@ export function EmployeesPage() {
             <TableCell><Badge variant={emp.employment_status === 'active' ? 'success' : 'default'}>{emp.employment_status}</Badge></TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => openEdit(emp)}><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="sm" onClick={async () => { if (confirm(`Deactivate ${emp.full_name}?`)) { await deleteEmployee(emp.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                {canUpdate && <Button variant="ghost" size="sm" onClick={() => openEdit(emp)}><Pencil className="h-4 w-4" /></Button>}
+                {canDelete && <Button variant="ghost" size="sm" onClick={async () => { if (confirm(`Deactivate ${emp.full_name}?`)) { await deleteEmployee(emp.id); load() } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
               </div>
             </TableCell>
           </TableRow>

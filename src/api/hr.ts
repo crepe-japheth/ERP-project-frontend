@@ -22,6 +22,69 @@ import { apiClient } from './client'
 
 const BASE = '/hr'
 
+export async function fetchSelfProfile() {
+  const { data } = await apiClient.get<Employee>(`${BASE}/self/profile/`)
+  return data
+}
+
+export async function fetchSelfAttendance(params?: { page?: number; page_size?: number }) {
+  const { data } = await apiClient.get<PaginatedResponse<Attendance>>(
+    `${BASE}/self/attendance/`,
+    { params },
+  )
+  return data
+}
+
+export async function fetchSelfPayslips(params?: { page?: number; page_size?: number }) {
+  const { data } = await apiClient.get<PaginatedResponse<Payslip>>(
+    `${BASE}/self/payslips/`,
+    { params },
+  )
+  return data
+}
+
+export async function fetchSelfPayslip(id: string) {
+  const { data } = await apiClient.get<Payslip>(
+    `${BASE}/self/payslips/${id}/`,
+  )
+  return data
+}
+
+export async function fetchSelfLeaveTypes() {
+  const { data } = await apiClient.get<LeaveType[]>(
+    `${BASE}/self/leave-types/`,
+  )
+  return data
+}
+
+export async function fetchSelfLeaveRequests(params?: { page?: number; page_size?: number }) {
+  const { data } = await apiClient.get<PaginatedResponse<LeaveRequest>>(
+    `${BASE}/self/leave-requests/`,
+    { params },
+  )
+  return data
+}
+
+export async function createSelfLeaveRequest(payload: {
+  leave_type: string
+  start_date: string
+  end_date: string
+  reason: string
+}) {
+  const { data } = await apiClient.post<LeaveRequest>(
+    `${BASE}/self/leave-requests/`,
+    payload,
+  )
+  return data
+}
+
+export async function cancelSelfLeaveRequest(id: string) {
+  const { data } = await apiClient.post<LeaveRequest>(
+    `${BASE}/self/leave-requests/${id}/cancel/`,
+  )
+  return data
+}
+
 export async function fetchHRSummary() {
   const { data } = await apiClient.get<HRSummary>(`${BASE}/summary/`)
   return data

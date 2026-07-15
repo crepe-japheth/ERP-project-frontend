@@ -16,6 +16,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Category, Product, UnitOfMeasure } from '../../types/inventory'
 
 const ITEM_TYPES = [
@@ -45,6 +46,10 @@ function itemTypeBadge(type: string) {
 }
 
 export function ProductsPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('inventory.products.create')
+  const canUpdate = hasPermission('inventory.products.update')
+  const canDelete = hasPermission('inventory.products.delete')
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [units, setUnits] = useState<UnitOfMeasure[]>([])
@@ -138,8 +143,8 @@ export function ProductsPage() {
       <PageHeader
         title="Products"
         description="Manage inventory items, stock levels, and item types."
-        actionLabel="+ Add Product"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ Add Product' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -199,20 +204,20 @@ export function ProductsPage() {
             </TableCell>
             <TableCell>
               <div className="flex gap-1">
-                <button
+                {canUpdate && <button
                   type="button"
                   onClick={() => openEdit(p)}
                   className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800"
                 >
                   <Pencil className="h-4 w-4" />
-                </button>
-                <button
+                </button>}
+                {canDelete && <button
                   type="button"
                   onClick={() => handleDelete(p)}
                   className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </button>}
               </div>
             </TableCell>
           </TableRow>

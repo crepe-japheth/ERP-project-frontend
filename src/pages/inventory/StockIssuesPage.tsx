@@ -17,6 +17,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import type { Product, StockIssue, StockIssueListItem } from '../../types/inventory'
 
 const ISSUE_TYPES = [
@@ -61,6 +62,9 @@ function statusVariant(status: string) {
 }
 
 export function StockIssuesPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('inventory.stock.create')
+  const canApprove = hasPermission('inventory.stock.approve')
   const [issues, setIssues] = useState<StockIssueListItem[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -165,8 +169,8 @@ export function StockIssuesPage() {
       <PageHeader
         title="Stock Issues"
         description="Issue stock to departments and employees. Track returns for returnable items."
-        actionLabel="+ New Issue"
-        onAction={openCreate}
+        actionLabel={canCreate ? '+ New Issue' : undefined}
+        onAction={canCreate ? openCreate : undefined}
       />
 
       <div className="relative mb-4 max-w-md">
@@ -198,12 +202,12 @@ export function StockIssuesPage() {
                 <button type="button" onClick={() => openDetail(issue.id)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600">
                   <Eye className="h-4 w-4" />
                 </button>
-                {issue.status === 'draft' && (
+                {canApprove && issue.status === 'draft' && (
                   <button type="button" onClick={() => handleApprove(issue.id)} className="rounded-lg p-1.5 text-slate-400 hover:text-blue-600">
                     <CheckCircle className="h-4 w-4" />
                   </button>
                 )}
-                {issue.status === 'approved' && (
+                {canApprove && issue.status === 'approved' && (
                   <button type="button" onClick={() => handleIssue(issue.id)} className="rounded-lg p-1.5 text-slate-400 hover:text-emerald-600">
                     <Truck className="h-4 w-4" />
                   </button>
@@ -273,7 +277,7 @@ export function StockIssuesPage() {
                     <td className="py-2"><Badge variant="info">{item.issue_type_display}</Badge></td>
                     <td className="py-2">{item.outstanding_quantity}</td>
                     <td className="py-2">
-                      {selected.status === 'issued' && Number(item.outstanding_quantity) > 0 && item.issue_type === 'returnable' && (
+                      {canCreate && selected.status === 'issued' && Number(item.outstanding_quantity) > 0 && item.issue_type === 'returnable' && (
                         <Button variant="ghost" size="sm" onClick={() => openReturn(item.id)}>
                           <Package className="h-3 w-3" /> Return
                         </Button>
@@ -284,8 +288,8 @@ export function StockIssuesPage() {
               </tbody>
             </table>
             <div className="flex gap-2">
-              {selected.status === 'draft' && <Button size="sm" onClick={() => handleApprove(selected.id)}>Approve</Button>}
-              {selected.status === 'approved' && <Button size="sm" onClick={() => handleIssue(selected.id)}><Truck className="h-4 w-4" /> Issue Stock</Button>}
+              {canApprove && selected.status === 'draft' && <Button size="sm" onClick={() => handleApprove(selected.id)}>Approve</Button>}
+              {canApprove && selected.status === 'approved' && <Button size="sm" onClick={() => handleIssue(selected.id)}><Truck className="h-4 w-4" /> Issue Stock</Button>}
             </div>
           </div>
         )}

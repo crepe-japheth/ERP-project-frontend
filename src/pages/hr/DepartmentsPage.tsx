@@ -17,6 +17,7 @@ import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
+import { useAuth } from '../../context/AuthContext'
 import { cn } from '../../lib/cn'
 import type { Department, Position } from '../../types/hr'
 
@@ -24,6 +25,10 @@ const deptEmpty = { name: '', code: '', description: '' }
 const posEmpty = { name: '', code: '', description: '', department: '' }
 
 export function DepartmentsPage() {
+  const { hasPermission } = useAuth()
+  const canCreate = hasPermission('hr.departments.create')
+  const canUpdate = hasPermission('hr.departments.update')
+  const canDelete = hasPermission('hr.departments.delete')
   const [tab, setTab] = useState<'departments' | 'positions'>('departments')
   const [departments, setDepartments] = useState<Department[]>([])
   const [positions, setPositions] = useState<Position[]>([])
@@ -140,8 +145,8 @@ export function DepartmentsPage() {
       <PageHeader
         title="Departments & Positions"
         description="Organize your workforce structure."
-        actionLabel={tab === 'departments' ? '+ Add Department' : '+ Add Position'}
-        onAction={tab === 'departments' ? openCreateDept : openCreatePos}
+        actionLabel={canCreate ? (tab === 'departments' ? '+ Add Department' : '+ Add Position') : undefined}
+        onAction={canCreate ? (tab === 'departments' ? openCreateDept : openCreatePos) : undefined}
       />
 
       <div className="mb-4 flex gap-2 border-b border-slate-200 dark:border-slate-700">
@@ -193,12 +198,12 @@ export function DepartmentsPage() {
               <TableCell className="max-w-xs truncate">{dept.description || '—'}</TableCell>
               <TableCell>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => openEditDept(dept)}>
+                  {canUpdate && <Button variant="ghost" size="sm" onClick={() => openEditDept(dept)}>
                     <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteDept(dept)}>
+                  </Button>}
+                  {canDelete && <Button variant="ghost" size="sm" onClick={() => handleDeleteDept(dept)}>
                     <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
+                  </Button>}
                 </div>
               </TableCell>
             </TableRow>
@@ -225,12 +230,12 @@ export function DepartmentsPage() {
               <TableCell className="max-w-xs truncate">{pos.description || '—'}</TableCell>
               <TableCell>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => openEditPos(pos)}>
+                  {canUpdate && <Button variant="ghost" size="sm" onClick={() => openEditPos(pos)}>
                     <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeletePos(pos)}>
+                  </Button>}
+                  {canDelete && <Button variant="ghost" size="sm" onClick={() => handleDeletePos(pos)}>
                     <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
+                  </Button>}
                 </div>
               </TableCell>
             </TableRow>
