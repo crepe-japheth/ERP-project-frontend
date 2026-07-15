@@ -1,13 +1,20 @@
 import { FileText } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { fetchPayrollPeriods, fetchPayslip, fetchPayslips } from '../../api/hr'
+import {
+  createIndividualPayslip,
+  fetchAllEmployees,
+  fetchPayrollPeriods,
+  fetchPayslip,
+  fetchPayslips,
+} from '../../api/hr'
 import { DashboardLayout } from '../../components/layout/DashboardLayout'
 import { Button } from '../../components/ui/Button'
 import { DataTable, TableCell, TableRow } from '../../components/ui/DataTable'
+import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
-import type { PayrollPeriod, Payslip } from '../../types/hr'
+import type { Employee, PayrollPeriod, Payslip } from '../../types/hr'
 
 function money(v: string | number) {
   return Number(v).toLocaleString('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 })
@@ -15,16 +22,33 @@ function money(v: string | number) {
 
 export function PayslipsPage() {
   const [periods, setPeriods] = useState<PayrollPeriod[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [payslips, setPayslips] = useState<Payslip[]>([])
   const [periodId, setPeriodId] = useState('')
   const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<Payslip | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    employee: '',
+    payroll_period: '',
+    name: '',
+    period_type: 'monthly',
+    start_date: '',
+    end_date: '',
+    notes: '',
+    force_new_payroll: false,
+  })
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const p = await fetchPayrollPeriods()
+      const [p, employeeList] = await Promise.all([
+        fetchPayrollPeriods(),
+        fetchAllEmployees(),
+      ])
       setPeriods(p.results)
+      setEmployees(employeeList)
       const selected = periodId || p.results[0]?.id || ''
       if (!periodId && selected) setPeriodId(selected)
       if (selected) {
@@ -36,9 +60,64 @@ export function PayslipsPage() {
 
   useEffect(() => { load() }, [load])
 
+  const openCreate = () => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = today.getMonth()
+    const monthStart = new Date(year, month, 1)
+    const monthEnd = new Date(year, month + 1, 0)
+    const dateValue = (value: Date) =>
+      `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
+    setForm({
+      employee: employees[0]?.id ?? '',
+      payroll_period: '',
+      name: '',
+      period_type: 'monthly',
+      start_date: dateValue(monthStart),
+      end_date: dateValue(monthEnd),
+      notes: '',
+      force_new_payroll: false,
+    })
+    setCreateOpen(true)
+  }
+
+  const handleCreate = async () => {
+    setSaving(true)
+    try {
+      const created = await createIndividualPayslip({
+        employee: form.employee,
+        payroll_period: form.payroll_period || null,
+        ...(form.payroll_period
+          ? {}
+          : {
+              name: form.name,
+              period_type: form.period_type,
+              start_date: form.start_date,
+              end_date: form.end_date,
+              notes: form.notes,
+              force_new_payroll: form.force_new_payroll,
+            }),
+      })
+      setCreateOpen(false)
+      setPeriodId(created.payroll_period)
+      setDetail(created)
+    } catch {
+      alert(
+        'Could not create the payslip. Check the employee contract, payroll status, and whether a payslip already exists.',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <DashboardLayout title="Payslips">
-      <PageHeader title="Payslips" description="Employee payslips generated from payroll." />
+      <PageHeader
+        title="Payslips"
+        description="Employee payslips generated from payroll."
+        actionLabel="+ Individual Payslip"
+        onAction={openCreate}
+      />
       <div className="mb-4 max-w-xs">
         <Select
           label="Payroll Period"
@@ -67,6 +146,126 @@ export function PayslipsPage() {
           </TableRow>
         ))}
       </DataTable>
+
+      <Modal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Create Individual Payslip"
+        size="lg"
+      >
+        <div className="grid gap-4">
+          <Select
+            label="Employee"
+            options={employees.map((employee) => ({
+              value: employee.id,
+              label: `${employee.full_name} (${employee.badge_id || employee.employee_number})`,
+            }))}
+            value={form.employee}
+            onChange={(event) =>
+              setForm({ ...form, employee: event.target.value })
+            }
+          />
+          <Select
+            label="Existing Draft Payroll (optional)"
+            options={[
+              { value: '', label: 'Find or create payroll from dates' },
+              ...periods
+                .filter((period) => period.status === 'draft')
+                .map((period) => ({
+                  value: period.id,
+                  label: `${period.name} (${period.start_date} – ${period.end_date})`,
+                })),
+            ]}
+            value={form.payroll_period}
+            onChange={(event) =>
+              setForm({ ...form, payroll_period: event.target.value })
+            }
+          />
+
+          {!form.payroll_period && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                  label="Start Date"
+                  type="date"
+                  value={form.start_date}
+                  onChange={(event) =>
+                    setForm({ ...form, start_date: event.target.value })
+                  }
+                />
+                <Input
+                  label="End Date"
+                  type="date"
+                  value={form.end_date}
+                  onChange={(event) =>
+                    setForm({ ...form, end_date: event.target.value })
+                  }
+                />
+                <Select
+                  label="Payroll Type"
+                  options={[
+                    { value: 'monthly', label: 'Monthly' },
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'biweekly', label: 'Biweekly' },
+                    { value: 'daily', label: 'Daily' },
+                  ]}
+                  value={form.period_type}
+                  onChange={(event) =>
+                    setForm({ ...form, period_type: event.target.value })
+                  }
+                />
+                <Input
+                  label="New Payroll Name (optional)"
+                  value={form.name}
+                  onChange={(event) =>
+                    setForm({ ...form, name: event.target.value })
+                  }
+                  placeholder="Employee correction — July 2026"
+                />
+              </div>
+              <Input
+                label="Notes"
+                value={form.notes}
+                onChange={(event) =>
+                  setForm({ ...form, notes: event.target.value })
+                }
+              />
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  className="mt-1"
+                  type="checkbox"
+                  checked={form.force_new_payroll}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      force_new_payroll: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  Create a separate correction payroll even if another payroll
+                  already covers these exact dates.
+                </span>
+              </label>
+            </>
+          )}
+        </div>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setCreateOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreate}
+            disabled={
+              saving ||
+              !form.employee ||
+              (!form.payroll_period && (!form.start_date || !form.end_date))
+            }
+          >
+            {saving ? 'Creating...' : 'Create Payslip'}
+          </Button>
+        </div>
+      </Modal>
 
       <Modal open={!!detail} onClose={() => setDetail(null)} title={`Payslip — ${detail?.employee_name}`} size="lg">
         {detail && (

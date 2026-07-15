@@ -364,6 +364,23 @@ export async function fetchPayslips(params?: { period?: string; employee?: strin
   return data
 }
 
+export async function createIndividualPayslip(payload: {
+  employee: string
+  payroll_period?: string | null
+  name?: string
+  period_type?: string
+  start_date?: string
+  end_date?: string
+  notes?: string
+  force_new_payroll?: boolean
+}) {
+  const { data } = await apiClient.post<Payslip>(
+    `${BASE}/payroll/payslips/create/`,
+    payload,
+  )
+  return data
+}
+
 export async function fetchPayslip(id: string) {
   const { data } = await apiClient.get<Payslip>(`${BASE}/payroll/payslips/${id}/`)
   return data
