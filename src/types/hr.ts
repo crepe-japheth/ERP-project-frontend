@@ -1,4 +1,9 @@
-import type { PaginatedResponse } from './inventory'
+export interface PaginatedResponse<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
 
 export interface HRSummary {
   total_employees: number
@@ -6,6 +11,8 @@ export interface HRSummary {
   pending_leave: number
   open_payroll_periods: number
   today_present: number
+  paid_this_month: string
+  active_contracts: number
 }
 
 export interface Branch {
@@ -24,8 +31,6 @@ export interface Department {
   description: string
   employee_count: number
   is_active: boolean
-  created_at: string
-  updated_at: string
 }
 
 export interface Position {
@@ -38,39 +43,119 @@ export interface Position {
   is_active: boolean
 }
 
+export interface EmergencyContact {
+  id?: string
+  name: string
+  relationship: string
+  phone: string
+}
+
+export interface EmployeeDocument {
+  id?: string
+  name: string
+  attachment?: string | null
+}
+
 export interface Employee {
   id: string
   employee_number: string
+  badge_id: string
+  badge_display?: string
   full_name: string
   first_name: string
+  middle_name: string
   last_name: string
-  national_id: string
-  passport: string
-  photo: string | null
+  national_id?: string
+  passport?: string
+  photo?: string | null
   gender: string
   date_of_birth: string | null
-  nationality: string
+  nationality?: string
+  country: string
+  city: string
   phone: string
   email: string
   address: string
-  emergency_contact_name: string
-  emergency_contact_phone: string
+  qualification: string
+  experience: string
+  marital_status: string
   hire_date: string | null
   employment_status: string
   department: string | null
   department_name: string
   position: string | null
   position_name: string
+  job_role: string
+  work_location: string
   supervisor: string | null
-  supervisor_name: string
+  supervisor_name?: string
   branch: string | null
-  branch_name: string
-  contract_type: string
-  salary_type: string
-  user: string | null
+  bank_name: string
+  bank_account: string
+  bank_account_holder: string
+  emergency_contacts?: EmergencyContact[]
+  documents?: EmployeeDocument[]
   is_active: boolean
-  created_at?: string
-  updated_at?: string
+}
+
+export interface EmploymentContract {
+  id: string
+  name: string
+  employee: string
+  employee_name: string
+  employee_number: string
+  position: string | null
+  position_name: string
+  department: string | null
+  department_name: string
+  shift: string
+  work_type: string
+  start_date: string
+  end_date: string | null
+  is_infinite: boolean
+  wage_type: string
+  basic_salary: string
+  payment_frequency: string
+  status: string
+  attachment: string | null
+  is_active: boolean
+}
+
+export interface Allowance {
+  id: string
+  title: string
+  apply_every_payroll: boolean
+  one_time_date: string | null
+  include_all_active: boolean
+  is_taxable: boolean
+  is_fixed: boolean
+  is_condition_based: boolean
+  amount: string
+  condition_field: string
+  condition_operator: string
+  condition_value: string
+  employee_ids: string[]
+  employee_names: string[]
+  is_active: boolean
+}
+
+export interface Deduction {
+  id: string
+  title: string
+  apply_every_payroll: boolean
+  one_time_date: string | null
+  include_all_active: boolean
+  is_tax: boolean
+  is_pretax: boolean
+  is_fixed: boolean
+  is_condition_based: boolean
+  amount: string
+  condition_field: string
+  condition_operator: string
+  condition_value: string
+  employee_ids: string[]
+  employee_names: string[]
+  is_active: boolean
 }
 
 export interface Attendance {
@@ -79,15 +164,13 @@ export interface Attendance {
   employee_name: string
   employee_number: string
   date: string
+  day: string
   clock_in: string | null
   clock_out: string | null
   status: string
   working_hours: string
-  late_minutes: number
-  early_leave_minutes: number
-  overtime_hours: string
+  hours_worked: string
   notes: string
-  created_at: string
 }
 
 export interface LeaveType {
@@ -96,7 +179,6 @@ export interface LeaveType {
   code: string
   days_per_year: number
   is_paid: boolean
-  description: string
 }
 
 export interface LeaveRequest {
@@ -111,11 +193,6 @@ export interface LeaveRequest {
   days: string
   reason: string
   status: string
-  approved_by: string | null
-  approved_by_name: string
-  approved_at: string | null
-  rejection_reason: string
-  created_at: string
 }
 
 export interface PayrollPeriod {
@@ -126,86 +203,11 @@ export interface PayrollPeriod {
   end_date: string
   status: string
   notes: string
-  created_at: string
-}
-
-export interface SalaryComponent {
-  id: string
-  name: string
-  code: string
-  component_type: string
-  is_taxable: boolean
-  is_fixed: boolean
-  description: string
-}
-
-export interface DeductionRule {
-  id: string
-  name: string
-  code: string
-  calculation_type: string
-  value: string
-  is_statutory: boolean
-  description: string
-}
-
-export interface EmployeeCompensation {
-  id: string
-  employee: string
-  employee_name: string
-  employee_number: string
-  basic_salary: string
-  housing_allowance: string
-  transport_allowance: string
-  communication_allowance: string
-  other_allowances: string
-  gross_salary: string
-  effective_from: string | null
-  notes: string
-}
-
-export interface EmployeeLoan {
-  id: string
-  employee: string
-  employee_name: string
-  employee_number: string
-  reference: string
-  principal_amount: string
-  interest_rate: string
-  monthly_deduction: string
-  balance: string
-  start_date: string
-  end_date: string | null
-  status: string
-  notes: string
-}
-
-export interface SalaryAdvance {
-  id: string
-  employee: string
-  employee_name: string
-  employee_number: string
-  reference: string
-  amount: string
-  recovery_months: number
-  monthly_recovery: string
-  balance: string
-  advance_date: string
-  status: string
-  notes: string
-}
-
-export interface OvertimeEntry {
-  id: string
-  employee: string
-  employee_name: string
-  employee_number: string
-  date: string
-  hours: string
-  rate: string
-  total: string
-  payroll_period: string | null
-  notes: string
+  total_pay: string
+  total_deductions: string
+  gross_pay: string
+  excluded_employee_ids: string[]
+  payslip_count: number
 }
 
 export interface PayslipLine {
@@ -227,22 +229,25 @@ export interface Payslip {
   total_earnings?: string
   total_deductions: string
   net_pay: string
-  overtime_hours: string
-  overtime_amount?: string
   lines?: PayslipLine[]
   created_at: string
 }
 
-export interface PayrollSummaryReport {
-  period: string
-  period_id: string
-  status: string
-  employee_count: number
-  total_gross: string
-  total_deductions: string
-  total_net: string
-  total_overtime: string
-  by_department: { department: string; employees: number; gross: string; net: string }[]
-}
+export const CONDITION_FIELDS = [
+  { value: 'basic_pay', label: 'Basic Pay' },
+  { value: 'gender', label: 'Gender' },
+  { value: 'experience', label: 'Experience' },
+  { value: 'age', label: 'Age' },
+  { value: 'marital_status', label: 'Marital Status' },
+  { value: 'department', label: 'Department' },
+  { value: 'position', label: 'Position' },
+]
 
-export type { PaginatedResponse }
+export const CONDITION_OPERATORS = [
+  { value: 'eq', label: 'Equal (==)' },
+  { value: 'ne', label: 'Not Equal (!=)' },
+  { value: 'gt', label: 'Greater (>)' },
+  { value: 'gte', label: 'Greater or Equal (>=)' },
+  { value: 'lt', label: 'Less (<)' },
+  { value: 'lte', label: 'Less or Equal (<=)' },
+]

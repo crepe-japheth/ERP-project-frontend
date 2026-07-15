@@ -1,22 +1,18 @@
 import type {
+  Allowance,
   Attendance,
   Branch,
-  DeductionRule,
+  Deduction,
   Department,
   Employee,
-  EmployeeCompensation,
-  EmployeeLoan,
+  EmploymentContract,
   HRSummary,
   LeaveRequest,
   LeaveType,
-  OvertimeEntry,
   PaginatedResponse,
   PayrollPeriod,
-  PayrollSummaryReport,
   Payslip,
   Position,
-  SalaryAdvance,
-  SalaryComponent,
 } from '../types/hr'
 import { apiClient } from './client'
 
@@ -75,7 +71,6 @@ export async function fetchEmployees(params?: {
   page?: number
   department?: string
   status?: string
-  branch?: string
 }) {
   const { data } = await apiClient.get<PaginatedResponse<Employee>>(`${BASE}/employees/`, { params })
   return data
@@ -86,18 +81,75 @@ export async function fetchEmployee(id: string) {
   return data
 }
 
-export async function createEmployee(payload: Partial<Employee>) {
+export async function createEmployee(payload: Record<string, unknown>) {
   const { data } = await apiClient.post<Employee>(`${BASE}/employees/`, payload)
   return data
 }
 
-export async function updateEmployee(id: string, payload: Partial<Employee>) {
+export async function updateEmployee(id: string, payload: Record<string, unknown>) {
   const { data } = await apiClient.patch<Employee>(`${BASE}/employees/${id}/`, payload)
   return data
 }
 
 export async function deleteEmployee(id: string) {
   await apiClient.delete(`${BASE}/employees/${id}/`)
+}
+
+export async function fetchContracts(params?: { search?: string; employee?: string; status?: string; page?: number }) {
+  const { data } = await apiClient.get<PaginatedResponse<EmploymentContract>>(`${BASE}/contracts/`, { params })
+  return data
+}
+
+export async function createContract(payload: Partial<EmploymentContract>) {
+  const { data } = await apiClient.post<EmploymentContract>(`${BASE}/contracts/`, payload)
+  return data
+}
+
+export async function updateContract(id: string, payload: Partial<EmploymentContract>) {
+  const { data } = await apiClient.patch<EmploymentContract>(`${BASE}/contracts/${id}/`, payload)
+  return data
+}
+
+export async function deleteContract(id: string) {
+  await apiClient.delete(`${BASE}/contracts/${id}/`)
+}
+
+export async function fetchAllowances(params?: { search?: string; page?: number }) {
+  const { data } = await apiClient.get<PaginatedResponse<Allowance>>(`${BASE}/allowances/`, { params })
+  return data
+}
+
+export async function createAllowance(payload: Record<string, unknown>) {
+  const { data } = await apiClient.post<Allowance>(`${BASE}/allowances/`, payload)
+  return data
+}
+
+export async function updateAllowance(id: string, payload: Record<string, unknown>) {
+  const { data } = await apiClient.patch<Allowance>(`${BASE}/allowances/${id}/`, payload)
+  return data
+}
+
+export async function deleteAllowance(id: string) {
+  await apiClient.delete(`${BASE}/allowances/${id}/`)
+}
+
+export async function fetchDeductions(params?: { search?: string; page?: number }) {
+  const { data } = await apiClient.get<PaginatedResponse<Deduction>>(`${BASE}/deductions/`, { params })
+  return data
+}
+
+export async function createDeduction(payload: Record<string, unknown>) {
+  const { data } = await apiClient.post<Deduction>(`${BASE}/deductions/`, payload)
+  return data
+}
+
+export async function updateDeduction(id: string, payload: Record<string, unknown>) {
+  const { data } = await apiClient.patch<Deduction>(`${BASE}/deductions/${id}/`, payload)
+  return data
+}
+
+export async function deleteDeduction(id: string) {
+  await apiClient.delete(`${BASE}/deductions/${id}/`)
 }
 
 export async function fetchAttendance(params?: {
@@ -141,7 +193,6 @@ export async function fetchLeaveRequests(params?: {
   search?: string
   page?: number
   status?: string
-  employee?: string
 }) {
   const { data } = await apiClient.get<PaginatedResponse<LeaveRequest>>(`${BASE}/leave-requests/`, { params })
   return data
@@ -187,34 +238,10 @@ export async function advancePayrollPeriod(id: string) {
   return data
 }
 
-export async function fetchSalaryComponents() {
-  const { data } = await apiClient.get<SalaryComponent[]>(`${BASE}/payroll/components/`)
-  return data
-}
-
-export async function fetchDeductionRules() {
-  const { data } = await apiClient.get<DeductionRule[]>(`${BASE}/payroll/deduction-rules/`)
-  return data
-}
-
-export async function fetchCompensations(params?: { search?: string; page?: number }) {
-  const { data } = await apiClient.get<PaginatedResponse<EmployeeCompensation>>(
-    `${BASE}/payroll/compensation/`,
-    { params },
-  )
-  return data
-}
-
-export async function updateCompensation(employeeId: string, payload: Partial<EmployeeCompensation>) {
-  const { data } = await apiClient.patch<EmployeeCompensation>(
-    `${BASE}/payroll/compensation/${employeeId}/`,
-    payload,
-  )
-  return data
-}
-
-export async function generatePayroll(periodId: string) {
-  const { data } = await apiClient.post<PayrollPeriod>(`${BASE}/payroll/periods/${periodId}/generate/`)
+export async function generatePayroll(periodId: string, excludeEmployeeIds: string[] = []) {
+  const { data } = await apiClient.post<PayrollPeriod>(`${BASE}/payroll/periods/${periodId}/generate/`, {
+    exclude_employee_ids: excludeEmployeeIds,
+  })
   return data
 }
 
@@ -225,60 +252,5 @@ export async function fetchPayslips(params?: { period?: string; employee?: strin
 
 export async function fetchPayslip(id: string) {
   const { data } = await apiClient.get<Payslip>(`${BASE}/payroll/payslips/${id}/`)
-  return data
-}
-
-export async function fetchLoans(params?: { search?: string; employee?: string; status?: string; page?: number }) {
-  const { data } = await apiClient.get<PaginatedResponse<EmployeeLoan>>(`${BASE}/payroll/loans/`, { params })
-  return data
-}
-
-export async function createLoan(payload: Partial<EmployeeLoan>) {
-  const { data } = await apiClient.post<EmployeeLoan>(`${BASE}/payroll/loans/`, payload)
-  return data
-}
-
-export async function fetchAdvances(params?: { search?: string; employee?: string; status?: string; page?: number }) {
-  const { data } = await apiClient.get<PaginatedResponse<SalaryAdvance>>(`${BASE}/payroll/advances/`, { params })
-  return data
-}
-
-export async function createAdvance(payload: Partial<SalaryAdvance>) {
-  const { data } = await apiClient.post<SalaryAdvance>(`${BASE}/payroll/advances/`, payload)
-  return data
-}
-
-export async function createOvertime(payload: Partial<OvertimeEntry>) {
-  const { data } = await apiClient.post<OvertimeEntry>(`${BASE}/payroll/overtime/`, payload)
-  return data
-}
-
-export async function fetchPayrollSummary(periodId: string) {
-  const { data } = await apiClient.get<PayrollSummaryReport>(`${BASE}/payroll/reports/summary/${periodId}/`)
-  return data
-}
-
-export async function fetchBankTransferReport(periodId: string) {
-  const { data } = await apiClient.get<Record<string, string>[]>(`${BASE}/payroll/reports/bank-transfer/${periodId}/`)
-  return data
-}
-
-export async function fetchTaxReport(periodId: string) {
-  const { data } = await apiClient.get<Record<string, string>[]>(`${BASE}/payroll/reports/tax/${periodId}/`)
-  return data
-}
-
-export async function fetchDeductionReport(periodId: string) {
-  const { data } = await apiClient.get<Record<string, string>[]>(`${BASE}/payroll/reports/deductions/${periodId}/`)
-  return data
-}
-
-export async function fetchAllowanceReport(periodId: string) {
-  const { data } = await apiClient.get<Record<string, string>[]>(`${BASE}/payroll/reports/allowances/${periodId}/`)
-  return data
-}
-
-export async function fetchEmployeeCostReport(periodId: string) {
-  const { data } = await apiClient.get<Record<string, string>[]>(`${BASE}/payroll/reports/employee-cost/${periodId}/`)
   return data
 }

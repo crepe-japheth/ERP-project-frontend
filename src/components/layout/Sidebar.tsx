@@ -62,9 +62,13 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Employees', to: '/hr/employees', icon: Users },
       { label: 'Departments', to: '/hr/departments', icon: Building2 },
+      { label: 'Contracts', to: '/hr/contracts', icon: ClipboardList },
+      { label: 'Allowances', to: '/hr/allowances', icon: Wallet },
+      { label: 'Deductions', to: '/hr/deductions', icon: PackageMinus },
       { label: 'Attendance', to: '/hr/attendance', icon: Calendar },
       { label: 'Leave', to: '/hr/leave', icon: ClipboardList },
       { label: 'Payroll', to: '/hr/payroll', icon: Wallet },
+      { label: 'Payslips', to: '/hr/payslips', icon: BarChart3 },
     ],
   },
   {

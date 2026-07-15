@@ -79,7 +79,14 @@ export function DashboardPage() {
   const [alertTotal, setAlertTotal] = useState(0)
   const [stockValue, setStockValue] = useState<string | null>(null)
   const [lowStockCount, setLowStockCount] = useState(0)
-  const [hrSummary, setHrSummary] = useState({ total_employees: 0, pending_leave: 0, today_present: 0 })
+  const [hrSummary, setHrSummary] = useState({
+    total_employees: 0,
+    pending_leave: 0,
+    today_present: 0,
+    open_payroll_periods: 0,
+    paid_this_month: '0',
+    active_contracts: 0,
+  })
 
   useEffect(() => {
     fetchAlertSummary().then((s) => {
@@ -173,8 +180,12 @@ export function DashboardPage() {
         />
         <KpiCard
           title="Payroll (Month)"
-          value="RWF 12.8M"
-          change="+8%"
+          value={
+            Number(hrSummary.paid_this_month) > 0
+              ? `RWF ${(Number(hrSummary.paid_this_month) / 1_000_000).toFixed(1)}M`
+              : `${hrSummary.open_payroll_periods} open`
+          }
+          change={`${hrSummary.active_contracts} active contracts`}
           trend="up"
           icon={Wallet}
           iconBg={isDark ? '#3b0764' : '#f5f3ff'}
