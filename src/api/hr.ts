@@ -73,6 +73,7 @@ export async function deletePosition(id: string) {
 export async function fetchEmployees(params?: {
   search?: string
   page?: number
+  page_size?: number
   department?: string
   status?: string
 }) {
@@ -83,6 +84,30 @@ export async function fetchEmployees(params?: {
 export async function fetchEmployee(id: string) {
   const { data } = await apiClient.get<Employee>(`${BASE}/employees/${id}/`)
   return data
+}
+
+export async function fetchAllEmployees(params?: {
+  search?: string
+  department?: string
+  status?: string
+}) {
+  const pageSize = 100
+  const firstPage = await fetchEmployees({ ...params, page: 1, page_size: pageSize })
+  const employees = [...firstPage.results]
+  const pageCount = Math.ceil(firstPage.count / pageSize)
+  if (pageCount > 1) {
+    const remainingPages = await Promise.all(
+      Array.from({ length: pageCount - 1 }, (_, index) =>
+        fetchEmployees({
+          ...params,
+          page: index + 2,
+          page_size: pageSize,
+        }),
+      ),
+    )
+    remainingPages.forEach((page) => employees.push(...page.results))
+  }
+  return employees
 }
 
 export async function createEmployee(payload: Record<string, unknown>) {
@@ -315,7 +340,9 @@ export async function fetchPayrollPeriods(params?: { status?: string; page?: num
   return data
 }
 
-export async function createPayrollPeriod(payload: Partial<PayrollPeriod>) {
+export async function createPayrollPeriod(
+  payload: Partial<PayrollPeriod> & { exclude_employee_ids?: string[] },
+) {
   const { data } = await apiClient.post<PayrollPeriod>(`${BASE}/payroll/periods/`, payload)
   return data
 }
