@@ -1,4 +1,8 @@
-import type { NotificationItem, NotificationPage } from '../types/notifications'
+import type {
+  NotificationItem,
+  NotificationPage,
+  NotificationPreference,
+} from '../types/notifications'
 import { apiClient } from './client'
 
 const BASE = '/notifications'
@@ -34,4 +38,28 @@ export async function markAllNotificationsRead() {
 
 export async function archiveNotification(id: string) {
   await apiClient.delete(`${BASE}/${id}/`)
+}
+
+export async function fetchNotificationPreferences() {
+  const { data } = await apiClient.get<NotificationPreference>(
+    `${BASE}/preferences/`,
+  )
+  return data
+}
+
+export async function updateNotificationPreferences(
+  payload: Partial<NotificationPreference>,
+) {
+  const { data } = await apiClient.patch<NotificationPreference>(
+    `${BASE}/preferences/`,
+    payload,
+  )
+  return data
+}
+
+export async function createNotificationWebSocketToken() {
+  const { data } = await apiClient.post<{ token: string; expires_in: number }>(
+    `${BASE}/ws-token/`,
+  )
+  return data.token
 }

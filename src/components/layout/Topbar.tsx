@@ -2,6 +2,7 @@ import { Bell, Loader2, Menu, Moon, Sun } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  createNotificationWebSocketToken,
   fetchNotifications,
   fetchUnreadNotificationCount,
   markNotificationRead,
@@ -53,6 +54,69 @@ export function Topbar({ title, onMenuClick }: TopbarProps) {
     const timer = window.setInterval(loadNotificationCount, 30_000)
     return () => window.clearInterval(timer)
   }, [loadNotificationCount])
+
+  useEffect(() => {
+    let socket: WebSocket | null = null
+    let reconnectTimer: number | null = null
+    let stopped = false
+    let attempts = 0
+
+    const connect = async () => {
+      try {
+        const token = await createNotificationWebSocketToken()
+        if (stopped) return
+        const configuredUrl = import.meta.env.VITE_WS_URL as string | undefined
+        const baseUrl =
+          configuredUrl ||
+          `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
+        socket = new WebSocket(
+          `${baseUrl.replace(/\/$/, '')}/ws/notifications/?token=${encodeURIComponent(token)}`,
+        )
+        socket.onopen = () => {
+          attempts = 0
+        }
+        socket.onmessage = (event) => {
+          const payload = JSON.parse(event.data) as {
+            type: string
+            notification?: NotificationItem
+          }
+          if (payload.type !== 'notification' || !payload.notification) return
+          setUnreadCount((count) => count + 1)
+          setNotifications((current) => [
+            payload.notification!,
+            ...current.filter((item) => item.id !== payload.notification!.id),
+          ].slice(0, 5))
+          window.dispatchEvent(
+            new CustomEvent('erp:notification', {
+              detail: payload.notification,
+            }),
+          )
+        }
+        socket.onclose = () => {
+          if (stopped) return
+          attempts += 1
+          reconnectTimer = window.setTimeout(
+            connect,
+            Math.min(1000 * 2 ** attempts, 30_000),
+          )
+        }
+      } catch {
+        if (stopped) return
+        attempts += 1
+        reconnectTimer = window.setTimeout(
+          connect,
+          Math.min(1000 * 2 ** attempts, 30_000),
+        )
+      }
+    }
+
+    connect()
+    return () => {
+      stopped = true
+      if (reconnectTimer !== null) window.clearTimeout(reconnectTimer)
+      socket?.close()
+    }
+  }, [])
 
   useEffect(() => {
     const close = (event: MouseEvent) => {

@@ -3,9 +3,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   archiveNotification,
+  fetchNotificationPreferences,
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  updateNotificationPreferences,
 } from '../api/notifications'
 import { DashboardLayout } from '../components/layout/DashboardLayout'
 import { Badge } from '../components/ui/Badge'
@@ -16,6 +18,7 @@ import { Select } from '../components/ui/Select'
 import { cn } from '../lib/cn'
 import type {
   NotificationItem,
+  NotificationPreference,
   NotificationSeverity,
 } from '../types/notifications'
 
@@ -50,6 +53,9 @@ export function NotificationsPage() {
   const [count, setCount] = useState(0)
   const [module, setModule] = useState('')
   const [unread, setUnread] = useState('')
+  const [preferences, setPreferences] =
+    useState<NotificationPreference | null>(null)
+  const [savingPreferences, setSavingPreferences] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -70,6 +76,39 @@ export function NotificationsPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    fetchNotificationPreferences().then(setPreferences)
+    const refresh = () => load()
+    window.addEventListener('erp:notification', refresh)
+    return () => window.removeEventListener('erp:notification', refresh)
+  }, [load])
+
+  const savePreferences = async () => {
+    if (!preferences) return
+    setSavingPreferences(true)
+    try {
+      setPreferences(await updateNotificationPreferences(preferences))
+    } finally {
+      setSavingPreferences(false)
+    }
+  }
+
+  const toggleModule = (
+    field: 'email_modules' | 'sms_modules',
+    moduleName: string,
+  ) => {
+    setPreferences((current) => {
+      if (!current) return current
+      const modules = current[field]
+      return {
+        ...current,
+        [field]: modules.includes(moduleName)
+          ? modules.filter((item) => item !== moduleName)
+          : [...modules, moduleName],
+      }
+    })
+  }
 
   const openNotification = async (notification: NotificationItem) => {
     if (!notification.is_read) {
@@ -102,6 +141,105 @@ export function NotificationsPage() {
           Mark all as read
         </Button>
       </PageHeader>
+
+      {preferences && (
+        <Card className="mb-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-white">
+                Delivery preferences
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Choose how operational notifications should reach you.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              disabled={savingPreferences}
+              onClick={savePreferences}
+            >
+              {savingPreferences && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save preferences
+            </Button>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+              <input
+                type="checkbox"
+                className="mt-1 accent-emerald-600"
+                checked={preferences.realtime_enabled}
+                onChange={(event) =>
+                  setPreferences({
+                    ...preferences,
+                    realtime_enabled: event.target.checked,
+                  })
+                }
+              />
+              <span>
+                <span className="block font-medium text-slate-800 dark:text-slate-100">
+                  Realtime
+                </span>
+                <span className="text-xs text-slate-500">
+                  Live updates through the notification bell.
+                </span>
+              </span>
+            </label>
+            {[
+              ['email', 'Email', preferences.email_enabled],
+              ['sms', 'SMS', preferences.sms_enabled],
+            ].map(([channel, label, enabled]) => (
+              <div
+                key={String(channel)}
+                className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+              >
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="mt-1 accent-emerald-600"
+                    checked={Boolean(enabled)}
+                    onChange={(event) =>
+                      setPreferences({
+                        ...preferences,
+                        [`${channel}_enabled`]: event.target.checked,
+                      })
+                    }
+                  />
+                  <span>
+                    <span className="block font-medium text-slate-800 dark:text-slate-100">
+                      {label}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      Requires a configured {String(channel).toUpperCase()} provider.
+                    </span>
+                  </span>
+                </label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {['inventory', 'hr', 'payroll', 'system'].map((moduleName) => {
+                    const field = `${channel}_modules` as
+                      | 'email_modules'
+                      | 'sms_modules'
+                    return (
+                      <label
+                        key={moduleName}
+                        className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300"
+                      >
+                        <input
+                          type="checkbox"
+                          className="accent-emerald-600"
+                          checked={preferences[field].includes(moduleName)}
+                          onChange={() => toggleModule(field, moduleName)}
+                        />
+                        {moduleName}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <Card padding="sm" className="mb-4 grid gap-3 sm:grid-cols-2">
         <Select

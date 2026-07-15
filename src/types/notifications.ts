@@ -22,3 +22,11 @@ export interface NotificationPage {
   previous: string | null
   results: NotificationItem[]
 }
+
+export interface NotificationPreference {
+  realtime_enabled: boolean
+  email_enabled: boolean
+  sms_enabled: boolean
+  email_modules: string[]
+  sms_modules: string[]
+}
