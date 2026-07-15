@@ -50,9 +50,8 @@ const navGroups: NavGroup[] = [
       },
       {
         label: 'Notifications',
-        to: '/inventory/alerts',
+        to: '/notifications',
         icon: Bell,
-        permissions: ['inventory.stock.read'],
       },
     ],
   },

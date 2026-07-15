@@ -8,6 +8,7 @@ import { HRRoutes } from './pages/hr'
 import { HRSettingsPage } from './pages/hr/HRSettingsPage'
 import { AccessControlPage } from './pages/AccessControlPage'
 import { MyWorkspacePage } from './pages/MyWorkspacePage'
+import { NotificationsPage } from './pages/NotificationsPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -101,7 +102,7 @@ export default function App() {
         path="/notifications"
         element={
           <ProtectedRoute>
-            <Navigate to="/inventory/alerts" replace />
+            <NotificationsPage />
           </ProtectedRoute>
         }
       />
