@@ -86,6 +86,15 @@ export function HRDashboardPage() {
             Review Leave
           </Button>
         )}
+        {hasPermission('hr.schedule.read') && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => navigate('/hr/schedule')}
+          >
+            Open Schedule
+          </Button>
+        )}
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">

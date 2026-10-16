@@ -68,7 +68,11 @@ function HomeRoute() {
     'hr.attendance.read',
     'hr.leave.read',
     'hr.payroll.read',
+    'hr.schedule.read',
   ]
+  if (hasPermission('hr.schedule.read') && !hrPermissions.slice(0, 6).some(hasPermission)) {
+    return <Navigate to="/hr/schedule" replace />
+  }
   if (hrPermissions.some(hasPermission)) {
     return <Navigate to="/hr/dashboard" replace />
   }
@@ -133,6 +137,7 @@ export default function App() {
                 'hr.attendance.read',
                 'hr.leave.read',
                 'hr.payroll.read',
+                'hr.schedule.read',
               ]}
             >
               <HRRoutes />

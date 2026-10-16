@@ -12,6 +12,7 @@ import {
   updateContractOption,
   updateLeaveType,
 } from '../../api/hr'
+import { fetchSchedulingPolicy, updateSchedulingPolicy } from '../../api/scheduling'
 import { DashboardLayout } from '../../components/layout/DashboardLayout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -28,8 +29,9 @@ import type {
   ContractOptionCategory,
   LeaveType,
 } from '../../types/hr'
+import type { SchedulingPolicy } from '../../types/scheduling'
 
-type SettingsTab = 'contract' | 'leave' | 'attendance'
+type SettingsTab = 'contract' | 'leave' | 'attendance' | 'schedule'
 
 const categoryOptions = [
   { value: 'work_type', label: 'Work Type' },
@@ -47,6 +49,13 @@ export function HRSettingsPage() {
   const [options, setOptions] = useState<ContractOption[]>([])
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([])
   const [policy, setPolicy] = useState<AttendancePolicy | null>(null)
+  const [schedulePolicy, setSchedulePolicy] = useState<SchedulingPolicy | null>(null)
+  const [schedulePolicyForm, setSchedulePolicyForm] = useState({
+    name: 'Default scheduling rules',
+    min_rest_hours: '11',
+    max_hours_per_day: '12',
+    max_hours_per_week: '48',
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [optionModal, setOptionModal] = useState(false)
@@ -77,10 +86,11 @@ export function HRSettingsPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [contractOptions, leaveData, attendancePolicy] = await Promise.all([
+      const [contractOptions, leaveData, attendancePolicy, schedulingPolicy] = await Promise.all([
         fetchContractOptions(),
         fetchLeaveTypeSettings(),
         fetchAttendancePolicy(),
+        fetchSchedulingPolicy(),
       ])
       setOptions(contractOptions)
       setLeaveTypes(leaveData)
@@ -91,6 +101,13 @@ export function HRSettingsPage() {
         work_end_time: attendancePolicy.work_end_time.slice(0, 5),
         break_minutes: String(attendancePolicy.break_minutes),
         late_grace_minutes: String(attendancePolicy.late_grace_minutes),
+      })
+      setSchedulePolicy(schedulingPolicy)
+      setSchedulePolicyForm({
+        name: schedulingPolicy.name,
+        min_rest_hours: String(Number(schedulingPolicy.min_rest_hours)),
+        max_hours_per_day: String(Number(schedulingPolicy.max_hours_per_day)),
+        max_hours_per_week: String(Number(schedulingPolicy.max_hours_per_week)),
       })
     } finally {
       setLoading(false)
@@ -178,6 +195,24 @@ export function HRSettingsPage() {
     }
   }
 
+  const saveSchedulePolicy = async () => {
+    setSaving(true)
+    try {
+      const updated = await updateSchedulingPolicy({
+        name: schedulePolicyForm.name,
+        min_rest_hours: schedulePolicyForm.min_rest_hours,
+        max_hours_per_day: schedulePolicyForm.max_hours_per_day,
+        max_hours_per_week: schedulePolicyForm.max_hours_per_week,
+      })
+      setSchedulePolicy(updated)
+      alert('Scheduling rules saved.')
+    } catch {
+      alert('Could not save scheduling rules. Weekly hours must be at least the daily limit.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const savePolicy = async () => {
     setSaving(true)
     try {
@@ -199,7 +234,7 @@ export function HRSettingsPage() {
     <DashboardLayout title="HR Settings">
       <PageHeader
         title="HR Settings"
-        description="Configure contract options, leave types, and attendance rules."
+        description="Configure contract options, leave types, attendance, and scheduling rules."
       />
 
       <div className="mb-5 flex gap-2 overflow-x-auto border-b border-slate-200 dark:border-slate-700">
@@ -208,6 +243,7 @@ export function HRSettingsPage() {
             ['contract', 'Contract Options'],
             ['leave', 'Leave Types'],
             ['attendance', 'Attendance'],
+            ['schedule', 'Scheduling'],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -404,6 +440,76 @@ export function HRSettingsPage() {
               {saving ? 'Saving...' : 'Save Working Hours'}
             </Button>
           </div>}
+        </Card>
+      )}
+
+      {tab === 'schedule' && (
+        <Card className="max-w-2xl p-5">
+          <h3 className="mb-1 font-semibold text-slate-900 dark:text-white">
+            Scheduling constraints
+          </h3>
+          <p className="mb-5 text-sm text-slate-500">
+            Rest time is required between shifts. Daily and weekly hour limits
+            warn planners before publish; approved leave and unavailability still block assignments.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Policy name"
+              value={schedulePolicyForm.name}
+              onChange={(event) =>
+                setSchedulePolicyForm({ ...schedulePolicyForm, name: event.target.value })
+              }
+            />
+            <div className="rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800">
+              Last saved: <strong>{schedulePolicy ? 'yes' : '—'}</strong>
+            </div>
+            <Input
+              label="Minimum rest (hours)"
+              type="number"
+              min="0"
+              step="0.5"
+              value={schedulePolicyForm.min_rest_hours}
+              onChange={(event) =>
+                setSchedulePolicyForm({
+                  ...schedulePolicyForm,
+                  min_rest_hours: event.target.value,
+                })
+              }
+            />
+            <Input
+              label="Max hours per day"
+              type="number"
+              min="1"
+              step="0.5"
+              value={schedulePolicyForm.max_hours_per_day}
+              onChange={(event) =>
+                setSchedulePolicyForm({
+                  ...schedulePolicyForm,
+                  max_hours_per_day: event.target.value,
+                })
+              }
+            />
+            <Input
+              label="Max hours per week"
+              type="number"
+              min="1"
+              step="0.5"
+              value={schedulePolicyForm.max_hours_per_week}
+              onChange={(event) =>
+                setSchedulePolicyForm({
+                  ...schedulePolicyForm,
+                  max_hours_per_week: event.target.value,
+                })
+              }
+            />
+          </div>
+          {canUpdate && (
+            <div className="mt-5 flex justify-end">
+              <Button onClick={saveSchedulePolicy} disabled={saving}>
+                {saving ? 'Saving...' : 'Save scheduling rules'}
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 

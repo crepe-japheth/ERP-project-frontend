@@ -10,6 +10,7 @@ import { HRDashboardPage } from './HRDashboardPage'
 import { LeavePage } from './LeavePage'
 import { PayrollPage } from './PayrollPage'
 import { PayslipsPage } from './PayslipsPage'
+import { SchedulePage } from './SchedulePage'
 
 function Section({
   permission,
@@ -35,6 +36,7 @@ export function HRRoutes() {
       <Route path="allowances" element={<Section permission="hr.payroll.read"><AllowancesPage /></Section>} />
       <Route path="deductions" element={<Section permission="hr.payroll.read"><DeductionsPage /></Section>} />
       <Route path="attendance" element={<Section permission="hr.attendance.read"><AttendancePage /></Section>} />
+      <Route path="schedule" element={<Section permission="hr.schedule.read"><SchedulePage /></Section>} />
       <Route path="leave" element={<Section permission="hr.leave.read"><LeavePage /></Section>} />
       <Route path="payroll" element={<Section permission="hr.payroll.read"><PayrollPage /></Section>} />
       <Route path="payslips" element={<Section permission="hr.payroll.read"><PayslipsPage /></Section>} />

@@ -44,6 +44,8 @@ export interface Department {
   name: string
   code: string
   description: string
+  head: string | null
+  head_name: string
   employee_count: number
   is_active: boolean
 }

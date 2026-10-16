@@ -5,6 +5,7 @@ import {
   createPosition,
   deleteDepartment,
   deletePosition,
+  fetchAllEmployees,
   fetchDepartments,
   fetchPositions,
   updateDepartment,
@@ -19,9 +20,9 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { Select } from '../../components/ui/Select'
 import { useAuth } from '../../context/AuthContext'
 import { cn } from '../../lib/cn'
-import type { Department, Position } from '../../types/hr'
+import type { Department, Employee, Position } from '../../types/hr'
 
-const deptEmpty = { name: '', code: '', description: '' }
+const deptEmpty = { name: '', code: '', description: '', head: '' }
 const posEmpty = { name: '', code: '', description: '', department: '' }
 
 export function DepartmentsPage() {
@@ -32,6 +33,7 @@ export function DepartmentsPage() {
   const [tab, setTab] = useState<'departments' | 'positions'>('departments')
   const [departments, setDepartments] = useState<Department[]>([])
   const [positions, setPositions] = useState<Position[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
@@ -45,16 +47,20 @@ export function DepartmentsPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [deptData, posData] = await Promise.all([
+      const [deptData, posData, employeeData] = await Promise.all([
         fetchDepartments({ search: search || undefined }),
         fetchPositions({ search: search || undefined }),
+        canUpdate
+          ? fetchAllEmployees({ status: 'active' }).catch(() => [])
+          : Promise.resolve([]),
       ])
       setDepartments(deptData.results)
       setPositions(posData)
+      setEmployees(employeeData)
     } finally {
       setLoading(false)
     }
-  }, [search])
+  }, [canUpdate, search])
 
   useEffect(() => {
     load()
@@ -79,7 +85,12 @@ export function DepartmentsPage() {
   const openEditDept = (dept: Department) => {
     setEditingDept(dept)
     setEditingPos(null)
-    setDeptForm({ name: dept.name, code: dept.code, description: dept.description ?? '' })
+    setDeptForm({
+      name: dept.name,
+      code: dept.code,
+      description: dept.description ?? '',
+      head: dept.head ?? '',
+    })
     setError('')
     setModalOpen(true)
   }
@@ -106,8 +117,14 @@ export function DepartmentsPage() {
         if (editingPos) await updatePosition(editingPos.id, payload)
         else await createPosition(payload)
       } else {
-        if (editingDept) await updateDepartment(editingDept.id, deptForm)
-        else await createDepartment(deptForm)
+        const payload = {
+          name: deptForm.name,
+          code: deptForm.code,
+          description: deptForm.description,
+          ...(editingDept ? { head: deptForm.head || null } : {}),
+        }
+        if (editingDept) await updateDepartment(editingDept.id, payload)
+        else await createDepartment({ name: deptForm.name, code: deptForm.code, description: deptForm.description })
       }
       setModalOpen(false)
       load()
@@ -186,6 +203,7 @@ export function DepartmentsPage() {
             { key: 'code', label: 'Code' },
             { key: 'name', label: 'Name' },
             { key: 'employees', label: 'Employees' },
+            { key: 'head', label: 'Head' },
             { key: 'description', label: 'Description' },
             { key: 'actions', label: '', className: 'w-24' },
           ]}
@@ -195,6 +213,7 @@ export function DepartmentsPage() {
               <TableCell className="font-mono text-xs">{dept.code}</TableCell>
               <TableCell className="font-medium">{dept.name}</TableCell>
               <TableCell>{dept.employee_count}</TableCell>
+              <TableCell>{dept.head_name || '—'}</TableCell>
               <TableCell className="max-w-xs truncate">{dept.description || '—'}</TableCell>
               <TableCell>
                 <div className="flex gap-1">
@@ -264,6 +283,20 @@ export function DepartmentsPage() {
           <div className="grid gap-4">
             <Input label="Name" value={deptForm.name} onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })} required />
             <Input label="Code" value={deptForm.code} onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })} required />
+            {editingDept && (
+              <Select
+                label="Department head"
+                placeholder="Select employee"
+                value={deptForm.head}
+                onChange={(e) => setDeptForm({ ...deptForm, head: e.target.value })}
+                options={employees
+                  .filter((employee) => employee.department === editingDept.id)
+                  .map((employee) => ({
+                    value: employee.id,
+                    label: employee.full_name,
+                  }))}
+              />
+            )}
             <Input label="Description" value={deptForm.description} onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })} />
           </div>
         )}
