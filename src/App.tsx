@@ -45,9 +45,6 @@ function PermissionRoute({
 
 function HomeRoute() {
   const { user, hasPermission } = useAuth()
-  if (user?.is_superuser) {
-    return <Navigate to="/inventory/dashboard" replace />
-  }
   if (
     hasPermission('core.users.read') &&
     hasPermission('core.roles.read')

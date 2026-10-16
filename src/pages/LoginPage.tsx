@@ -150,7 +150,6 @@ export function LoginPage() {
               Sign in
             </Button>
           </form>
-
         </div>
       </div>
     </div>
